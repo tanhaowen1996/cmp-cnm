@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,9 +24,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-pg-2*hls3&x0oz@6tgg-t&2_d5*7+u4mj3ky)fhst)254g_^x('
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(int(os.getenv('DEBUG', 1)))
 
-ALLOWED_HOSTS = []
+
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -37,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'drf_yasg',
+    'lb'
 ]
 
 MIDDLEWARE = [
@@ -75,8 +79,16 @@ WSGI_APPLICATION = 'cmp_cnm.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME', 'cmp_iaas'),
+        # 'USER': os.getenv('DB_USER', 'cmp_iaas'),
+        # 'PASSWORD': os.getenv('DB_PASSWORD', 'cmp_iaas'),
+        'USER': os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'r00tme'),
+        'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+        # 'HOST': os.getenv('DB_HOST', '10.209.0.161'),
+        'PORT': int(os.getenv('DB_PORT', 5432)),
+        'CONN_MAX_AGE': 3
     }
 }
 
@@ -123,3 +135,46 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+OS_PROJECT_DOMAIN_NAME = os.getenv('OS_PROJECT_DOMAIN_NAME', 'Default')
+OS_USER_DOMAIN_NAME = os.getenv('OS_USER_DOMAIN_NAME', 'Default')
+OS_PROJECT_NAME = os.getenv('OS_PROJECT_NAME', '')
+OS_TENANT_NAME = os.getenv('OS_TENANT_NAME', '')
+OS_USERNAME = os.getenv('OS_USERNAME', '')
+OS_PASSWORD = os.getenv('OS_PASSWORD', '')
+OS_AUTH_URL = os.getenv('OS_AUTH_URL', '')
+OS_INTERFACE = os.getenv('OS_INTERFACE', 'internal')
+OS_ENDPOINT_TYPE = os.getenv('OS_ENDPOINT_TYPE', 'internalURL')
+OS_IDENTITY_API_VERSION = int(os.getenv('OS_IDENTITY_API_VERSION', '3'))
+OS_REGION_NAME = os.getenv('OS_REGION_NAME', '')
+OS_AUTH_PLUGIN = os.getenv('OS_AUTH_PLUGIN', 'password')
+
+OS_TOKEN_KEY = os.getenv('OPENSTACK_TOKEN_KEY', 'Os-Token')
+
+NS_HOST = os.getenv('NS_HOST', '10.208.240.252')
+NS_PROTOCOL = os.getenv('NS_PROTOCOL', 'http')
+NS_USER = os.getenv('NS_USER', 'fzyh_mawei')
+NS_PASSWD = os.getenv('NS_PASSWD', 'fzyh_mawei_yh601933')
+NS_TIME = os.getenv('NS_TIME', 3600)
+
+ACCOUNT_INFO_KEY = os.getenv('ACCOUNT_INFO_KEY', 'Account-Info')
+
+SWAGGER = bool(int(os.getenv('SWAGGER', 1)))
+
+if SWAGGER:
+    SWAGGER_SETTINGS = {
+        'LOGOUT_URL': '/admin/logout/',
+        'SECURITY_DEFINITIONS': {
+            ACCOUNT_INFO_KEY: {
+                'type': 'apiKey',
+                'name': ACCOUNT_INFO_KEY.lower(),
+                'in': 'header'
+            },
+            OS_TOKEN_KEY: {
+                'type': 'apiKey',
+                'name': OS_TOKEN_KEY.lower(),
+                'in': 'header'
+            }
+        },
+    }
