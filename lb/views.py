@@ -1,5 +1,4 @@
 from django.shortcuts import render
-from .utils import NSMixin
 from rest_framework import mixins, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -7,6 +6,8 @@ from cmp_cnm.authentication import OSAuthentication
 from .serializers import LoadBalanceSerializer
 from .models import LoadBalance
 from .filters import LoadBalanceFilter
+
+from .citrixapi.session import NSMixin
 
 # Create your views here.
 
