@@ -8,7 +8,7 @@ from nssrc.com.citrix.netscaler.nitro.resource.config.lb.lbvserver_service_bindi
 from nssrc.com.citrix.netscaler.nitro.resource.config.basic.service import service
 from nssrc.com.citrix.netscaler.nitro.resource.config.basic.server import server
 from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslcertkey import sslcertkey
-from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslcertkey_binding import sslcertkey_binding
+from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslvserver_sslcertkey_binding import sslvserver_sslcertkey_binding
 import os
 
 """
@@ -71,57 +71,6 @@ def get_lb(session, name):
         print("Exception::message=" + str(exc.args))
 
 
-def delete_lb_listener_v7_check(session, name):
-    try:
-        lb_policy = csvserver_cspolicy_binding.get(session, name)
-        return lb_policy
-    except nitro_exception as exc:
-        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
-    except Exception as exc:
-        print("Exception::message=" + str(exc.args))
-
-
-def delete_lb_listener_v7(session, name):
-    try:
-        lb_listener = csvserver()
-        lb_listener.delete(session, name)
-    except nitro_exception as exc:
-        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
-    except Exception as exc:
-        print("Exception::message=" + str(exc.args))
-
-
-def create_lb_listener_v7(session, name, address, port, protocol, ssl=None):
-    """
-    新建7层带有端口和协议的Content Switching vs，作为负载均衡的监听器
-    """
-    try:
-        lb_listener = csvserver()
-        lb_listener.name = name
-        lb_listener.servicetype = protocol
-        lb_listener.ipv46 = address
-        lb_listener.port = port
-        csvserver.add(session, lb_listener)
-        if protocol == "HTTPS":
-            ssl_binding = sslcertkey_binding()
-            # ssl_binding.
-    except nitro_exception as exc:
-        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
-    except Exception as exc:
-        print("Exception::message=" + str(exc.args))
-
-
-def delete_lb_listener_v4(session, name):
-    try:
-        lb_listener = csvserver()
-        lb_listener.delete(session, name)
-        delete_lb_ture_policy(session, name)
-    except nitro_exception as exc:
-        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
-    except Exception as exc:
-        print("Exception::message=" + str(exc.args))
-
-
 def create_lb_listener_v4(session, name, address, port, protocol, lbmethod):
     """
     新建4层带有端口和协议的Content Switching vs，作为负载均衡的监听器
@@ -145,24 +94,63 @@ def create_lb_listener_v4(session, name, address, port, protocol, lbmethod):
         print("Exception::message=" + str(exc.args))
 
 
-def delete_lb_ture_policy(session, name):
+def delete_lb_listener_v4(session, name):
     try:
-        cspolicy.delete(session, name)
-        delete_lb_action(session, name)
+        lb_listener = csvserver()
+        lb_listener.delete(session, name)
+        delete_lb_ture_policy(session, name)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
 
-def create_lb_true_policy(session, address, port, protocol, lbmethod):
+
+def create_lb_listener_v7(session, name, address, port, protocol):
+    """
+    新建7层带有端口和协议的Content Switching vs，作为负载均衡的监听器
+    """
     try:
-        name = address + ":" + str(port) + "-" + protocol
-        create_lb_action(session, name, protocol, lbmethod)
-        lb_true_policy = cspolicy()
-        lb_true_policy.policyname = name
-        lb_true_policy.rule = "true"
-        lb_true_policy.action = name
-        cspolicy.add(session, lb_true_policy)
+        protocol_lb = protocol
+        if protocol == "HTTPS":
+            protocol_lb = "SSL"
+        lb_listener = csvserver()
+        lb_listener.name = name
+        lb_listener.servicetype = protocol_lb
+        lb_listener.ipv46 = address
+        lb_listener.port = port
+        csvserver.add(session, lb_listener)
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+
+
+def add_ssl(session, ssl_name, listener_name):
+    try:
+        csvs = sslvserver_sslcertkey_binding()
+        csvs.vservername = listener_name
+        csvs.certkeyname = ssl_name
+        sslvserver_sslcertkey_binding.add(session, csvs)
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+
+
+def delete_lb_listener_v7_check(session, name):
+    try:
+        lb_policy = csvserver_cspolicy_binding.get(session, name)
+        return lb_policy
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+
+
+def delete_lb_listener_v7(session, name):
+    try:
+        lb_listener = csvserver()
+        lb_listener.delete(session, name)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
     except Exception as exc:
@@ -198,18 +186,6 @@ def create_lb_host(session, name, host, match_type, listener, protocol):
                 break
         csvs_host.priority = priority
         csvserver_cspolicy_binding.add(session, csvs_host)
-    except nitro_exception as exc:
-        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
-    except Exception as exc:
-        print("Exception::message=" + str(exc.args))
-
-
-def delete_csvs_policy(session, csvs_name, policy_name):
-    try:
-        csvs = csvserver_cspolicy_binding()
-        csvs.name = csvs_name
-        csvs.policyname = policy_name
-        csvserver_cspolicy_binding.delete(session, csvs)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
     except Exception as exc:
@@ -285,6 +261,43 @@ def delete_lb_path(session, csvs_name, path_name):
         print("Exception::message=" + str(exc.args))
 
 
+def create_lb_true_policy(session, address, port, protocol, lbmethod):
+    try:
+        name = address + ":" + str(port) + "-" + protocol
+        create_lb_action(session, name, protocol, lbmethod)
+        lb_true_policy = cspolicy()
+        lb_true_policy.policyname = name
+        lb_true_policy.rule = "true"
+        lb_true_policy.action = name
+        cspolicy.add(session, lb_true_policy)
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+
+
+def delete_lb_ture_policy(session, name):
+    try:
+        cspolicy.delete(session, name)
+        delete_lb_action(session, name)
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+
+
+def delete_csvs_policy(session, csvs_name, policy_name):
+    try:
+        csvs = csvserver_cspolicy_binding()
+        csvs.name = csvs_name
+        csvs.policyname = policy_name
+        csvserver_cspolicy_binding.delete(session, csvs)
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+
+
 def create_lb_action(session, name, protocol, lbmethod):
     """
     创建Content Switching策略的action和lb_vs
@@ -319,9 +332,12 @@ def create_lb_vs(session, name, protocol, lbmethod):
     lbmethod: 轮询 ROUNDROBIN ，最小连接数 LEASTCONNECTION
     """
     try:
+        protocol_lb = protocol
+        if protocol == "HTTPS":
+            protocol_lb = "SSL"
         lb_vserver = lbvserver()
         lb_vserver.name = name
-        lb_vserver.servicetype = protocol
+        lb_vserver.servicetype = protocol_lb
         lb_vserver.lbmethod = lbmethod
         lbvserver.add(session, lb_vserver)
     except nitro_exception as exc:
@@ -425,6 +441,9 @@ def create_lb_member(session, address, port, protocol):
     新建lb_service
     """
     try:
+        protocol_lb = protocol
+        if protocol == "HTTPS":
+            protocol_lb = "SSL"
         lb_member = service()
         lb_member.name = address + ":" + str(port) + "-" + protocol
         if address not in list_server(session):
@@ -432,7 +451,7 @@ def create_lb_member(session, address, port, protocol):
         else:
             lb_member.servername = address
         lb_member.port = port
-        lb_member.servicetype = protocol
+        lb_member.servicetype = protocol_lb
         lb_member.add(session, lb_member)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
@@ -468,7 +487,3 @@ def delete_ssl(session, name):
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
-
-
-
-
