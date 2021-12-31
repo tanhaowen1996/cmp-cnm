@@ -164,6 +164,10 @@ class LoadBalanceListener(models.Model):
     def delete_lb_listenet_v7(self, ns_session, name):
         citrix_client.delete_lb_listener_v7(ns_session, name)
 
+    @classmethod
+    def add_ssl(cls, ns_session, ssl_name, listener_name):
+        citrix_client.add_ssl(session=ns_session, ssl_name=ssl_name, listener_name=listener_name)
+
 
 class LoadBalanceHost(models.Model):
     id = models.UUIDField(
