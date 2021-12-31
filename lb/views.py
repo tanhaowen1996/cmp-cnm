@@ -154,6 +154,9 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                                                       address=lb.ip,
                                                       port=data['port'],
                                                       protocol=data['protocol'])
+            if data['protocol'] == "HTTPS":
+                ssl = data['ssl']
+                LoadBalanceListener.add_ssl(ns_conn, ssl_name=ssl, listener_name=lb_listener_name)
         except nitro_exception as exc:
             logger.error(f"try creating LoadBalance {data['name']} : {exc}")
             return Response({
