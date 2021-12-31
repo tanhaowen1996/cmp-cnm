@@ -18,12 +18,18 @@ from django.conf.urls import re_path
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework.routers import SimpleRouter
-from lb.views import LBViewSet
+from lb.views import LoadBalanceViewSet, LoadBalanceListenerViewSet, \
+                     LoadBalanceHostViewSet, LoadBalancePathViewSet, \
+                     LoadBalanceMemberViewSet, SSLViewSet
 
 
 router = SimpleRouter(trailing_slash=False)
-router.register(r'lb', LBViewSet, basename='loadbalance')
-
+router.register(r'lb', LoadBalanceViewSet, basename='load_balance')
+router.register(r'lb_listener', LoadBalanceListenerViewSet, basename='load_balance_listener')
+router.register(r'lb_host', LoadBalanceHostViewSet, basename='load_balance_host')
+router.register(r'lb_path', LoadBalancePathViewSet, basename='load_balance_path')
+router.register(r'lb_member', LoadBalanceMemberViewSet, basename='load_balance_member')
+router.register(r'SSL', SSLViewSet, basename='SSL')
 
 urlpatterns = [
     path('v2/', include(router.urls)),
@@ -35,7 +41,7 @@ if getattr(settings, 'SWAGGER', False):
     from drf_yasg.views import get_schema_view
     from drf_yasg import openapi
     schema_view = get_schema_view(
-        openapi.Info(title="POC-3", default_version='v1'),
+        openapi.Info(title="cmp-cnm", default_version='v2'),
         public=True,
         permission_classes=(permissions.AllowAny,))
     urlpatterns += [
