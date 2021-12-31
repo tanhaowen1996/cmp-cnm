@@ -1,21 +1,65 @@
 from django_filters import (
-    Filter,
     FilterSet,
     CharFilter,
-    ChoiceFilter,
-    OrderingFilter,
     TypedChoiceFilter)
 from distutils.util import strtobool
-from .models import LoadBalance
+from .models import LoadBalance, LoadBalanceListener, LoadBalanceHost, \
+    LoadBalancePath, LoadBalanceMember, SSL
 
 
 class LoadBalanceFilter(FilterSet):
     id = CharFilter(field_name='id', lookup_expr='icontains')
     name = CharFilter(field_name='name', lookup_expr='icontains')
-    is_public = TypedChoiceFilter(
-        choices=(('false', 'false'), ('true', 'true')),
-        coerce=strtobool)
+    tenant_id = CharFilter(field_name='tenant_id', lookup_expr='icontains')
+    tenant_name = CharFilter(field_name='tenant_name', lookup_expr='icontains')
 
     class Meta:
         mode = LoadBalance
+        filter = ('name', 'id', 'tenant_id', 'tenant_name')
+
+
+class LoadBalanceListenerFilter(FilterSet):
+    id = CharFilter(field_name='id', lookup_expr='icontains')
+    name = CharFilter(field_name='name', lookup_expr='icontains')
+    protocol = CharFilter(field_name='protocol', lookup_expr='icontains')
+
+    class Meta:
+        mode = LoadBalanceListener
+        filter = ('name', 'id', 'protocol')
+
+
+class LoadBalanceHostFilter(FilterSet):
+    id = CharFilter(field_name='id', lookup_expr='icontains')
+    name = CharFilter(field_name='name', lookup_expr='icontains')
+    host = CharFilter(field_name='host', lookup_expr='icontains')
+
+    class Meta:
+        mode = LoadBalanceHost
+        filter = ('name', 'id', 'host')
+
+
+class LoadBalancePathFilter(FilterSet):
+    id = CharFilter(field_name='id', lookup_expr='icontains')
+    name = CharFilter(field_name='name', lookup_expr='icontains')
+
+    class Meta:
+        mode = LoadBalancePath
+        filter = ('name', 'id')
+
+
+class LoadBalanceMemberFilter(FilterSet):
+    id = CharFilter(field_name='id', lookup_expr='icontains')
+    name = CharFilter(field_name='name', lookup_expr='icontains')
+
+    class Meta:
+        mode = LoadBalanceMember
         filter = ('name', 'id', 'is_public')
+
+
+class SSLFilter(FilterSet):
+    id = CharFilter(field_name='id', lookup_expr='icontains')
+    name = CharFilter(field_name='name', lookup_expr='icontains')
+
+    class Meta:
+        mode = SSL
+        filter = ('name', 'id')
