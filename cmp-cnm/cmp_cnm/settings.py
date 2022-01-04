@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-pg-2*hls3&x0oz@6tgg-t&2_d5*7+u4mj3ky)fhst)254g_^x('
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(int(os.getenv('DEBUG', 1)))
+DEBUG = bool(int(os.getenv('DEBUG', 0)))
 
 
 ALLOWED_HOSTS = ['*']
@@ -82,13 +82,9 @@ WSGI_APPLICATION = 'cmp_cnm.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'cmp_iaas'),
-        # 'USER': os.getenv('DB_USER', 'cmp_iaas'),
-        # 'PASSWORD': os.getenv('DB_PASSWORD', 'cmp_iaas'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'r00tme'),
+        'USER': os.getenv('DB_USER', 'cmp_iaas'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'cmp_iaas'),
         'HOST': os.getenv('DB_HOST', '127.0.0.1'),
-        # 'HOST': os.getenv('DB_HOST', '10.209.0.161'),
         'PORT': int(os.getenv('DB_PORT', 5432)),
         'CONN_MAX_AGE': 3
     }
@@ -154,15 +150,15 @@ OS_AUTH_PLUGIN = os.getenv('OS_AUTH_PLUGIN', 'password')
 
 OS_TOKEN_KEY = os.getenv('OPENSTACK_TOKEN_KEY', 'Os-Token')
 
-NS_HOST = os.getenv('NS_HOST', '10.208.240.252')
+NS_HOST = os.getenv('NS_HOST', '127.0.0.1')
 NS_PROTOCOL = os.getenv('NS_PROTOCOL', 'http')
-NS_USER = os.getenv('NS_USER', 'fzyh_mawei')
-NS_PASSWD = os.getenv('NS_PASSWD', 'fzyh_mawei_yh601933')
+NS_USER = os.getenv('NS_USER', '')
+NS_PASSWD = os.getenv('NS_PASSWD', '')
 NS_TIME = os.getenv('NS_TIME', 3600)
 
 ACCOUNT_INFO_KEY = os.getenv('ACCOUNT_INFO_KEY', 'Account-Info')
 
-SWAGGER = bool(int(os.getenv('SWAGGER', 1)))
+SWAGGER = bool(int(os.getenv('SWAGGER', 0)))
 
 if SWAGGER:
     SWAGGER_SETTINGS = {
