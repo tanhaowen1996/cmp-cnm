@@ -11,6 +11,7 @@ python-build:
   stage: build
   script:
   - source /data/deploy/ci.sh
+  - cd cmp-cnm
   - docker_build_py_v1
   only:
   - master
