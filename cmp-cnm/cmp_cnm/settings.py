@@ -28,7 +28,7 @@ DEBUG = bool(int(os.getenv('DEBUG', 0)))
 
 
 ALLOWED_HOSTS = ['*']
-
+APPEND_SLASH = False
 
 # Application definition
 
@@ -98,8 +98,9 @@ WSGI_APPLICATION = 'cmp_cnm.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME', 'cmp_iaas'),
         'USER': os.getenv('DB_USER', 'cmp_iaas'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'cmp_iaas'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
         'HOST': os.getenv('DB_HOST', '127.0.0.1'),
         'PORT': int(os.getenv('DB_PORT', 5432)),
         'CONN_MAX_AGE': 3
@@ -129,15 +130,19 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'zh-hans'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
 
-USE_L10N = True
+USE_L10N = False
 
 USE_TZ = True
+
+DATETIME_FORMAT = 'Y-m-d H:i:s'
+
+DATE_FORMAT = 'Y-m-d'
 
 
 # Static files (CSS, JavaScript, Images)
