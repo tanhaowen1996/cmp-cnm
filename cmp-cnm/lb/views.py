@@ -12,6 +12,7 @@ from .filters import LoadBalanceFilter, LoadBalanceListenerFilter, LoadBalanceHo
     LoadBalancePathFilter, LoadBalanceMemberFilter, SSLFilter
 from .citrixapi.session import NSMixin
 import logging
+from datetime import datetime
 
 logger = logging.getLogger(__package__)
 
@@ -435,7 +436,48 @@ class SSLViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     queryset = SSL.objects.all()
 
     def create(self, request, *args, **kwargs):
-        pass
+        ns_conn = NSMixin.get_session()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        try:
+            SSL.create_ssl(ns_conn, data['name'], data['cert'], data['pkey'])
+        except nitro_exception as exc:
+            logger.error(f"try Delete LoadBalance {data['name']} : {exc}")
+            return Response({
+                "detail": f"{exc}"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            ssl = SSL.get_ssl(ns_conn, data['name'])
+            GMT_FORMAT = "%b %d %H:%M:%S %Y GMT"
+
+            serializer.save(
+                name=data['name'],
+                cert=data['cert'],
+                pkey=data['pkey'],
+                scope="",
+                cert_typr="SVR",
+                domain=ssl.sandns,
+                status=ssl.status,
+                cert_begin_time=datetime.strptime(ssl.clientcertnotbefore, GMT_FORMAT),
+                cert_end_time=datetime.strptime(ssl.ssl.clientcertnotafter, GMT_FORMAT),
+                tenant_id=request.account_info.get('tenantId'),
+                tenant_name=request.account_info.get('tenantName'),
+            )
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def destroy(self, request, *args, **kwargs):
-        pass
+        ns_conn = NSMixin.get_session()
+        instance = self.get_object()
+        try:
+            instance.delete_ssl(ns_conn, request.data['name'])
+        except nitro_exception as exc:
+            logger.error(f"try Delete LoadBalance {instance.name} : {exc}")
+            return Response({
+                "detail": f"{exc}"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            self.perform_destroy(instance)
+            return Response(status=status.HTTP_201_CREATED)
+
