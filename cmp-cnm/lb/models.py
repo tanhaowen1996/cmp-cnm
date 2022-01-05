@@ -362,9 +362,6 @@ class SSL(models.Model):
     cert_end_time = models.DateTimeField(
         null=True
     )
-    update_time = models.DateTimeField(
-        null=True
-    )
     tenant_id = models.CharField(
         null=True,
         max_length=64
@@ -382,3 +379,23 @@ class SSL(models.Model):
 
     class Meta:
         indexes = (BrinIndex(fields=['updated_at', 'created_at']),)
+
+    @classmethod
+    def get_ssl(cls, ns_session, name):
+        return citrix_client.get_ssl(ns_session, name)
+
+    @classmethod
+    def create_ssl(cls, ns_session, name, cert, pkey):
+        list_cert = cert.split("-----END CERTIFICATE-----")
+        list_cert.remove("\n")
+        cert_sc = list_cert[0] + "-----END CERTIFICATE-----"
+        citrix_client.import_ssl(session=ns_session, name=name, cert=cert_sc, pkey=pkey)
+        if len(list_cert) == 2:
+            cert_root = list_cert[1] + "-----END CERTIFICATE-----"
+            r_name = name + "-root"
+            citrix_client.import_root_ssl(ns_session, name=r_name, cert=cert_root)
+            citrix_client.ssl_link_root(ns_session, sc_name=name, rsc_name=r_name)
+
+    def delete_ssl(self, ns_session, name):
+        citrix_client.delete_ssl(ns_session, name)
+
