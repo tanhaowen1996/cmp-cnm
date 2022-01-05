@@ -43,5 +43,5 @@ class LoadBalancePathAdmin(admin.ModelAdmin):
 class SSLAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'scope', 'cert_type', 'domain',
                     'cert', 'pkey', 'status', 'cert_begin_time',
-                    'cert_end_time', 'update_time', 'tenant_id',
+                    'cert_end_time', 'tenant_id',
                     'tenant_name', 'created_at')
