@@ -57,6 +57,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'cmp_cnm.urls'
+HEALTH_CHECK_PATH = os.getenv('HEALTH_CHECK_PATH', '/health')
 
 TEMPLATES = [
     {
