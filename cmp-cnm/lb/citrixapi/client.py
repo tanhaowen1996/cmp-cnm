@@ -479,10 +479,61 @@ def import_ssl(session, name, cert, pkey):
         print("Exception::message=" + str(exc.args))
 
 
+def import_root_ssl(session, name, cert):
+    try:
+        ssl_cert = sslcertkey()
+        ssl_cert.certkey = name
+        with open("/tmp/{0}.crt".format(name), 'w') as cert_file:
+            cert_file.write(cert)
+        cert_file.close()
+        os.path = "/tmp/"
+        ssl_cert.cert = "{0}.crt".format(name)
+        sslcertkey.add(session, ssl_cert)
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+
+
+def ssl_link_root(session, sc_name, rsc_name):
+    try:
+        ssl_link = sslcertkey()
+        ssl_link.certkey = sc_name
+        ssl_link.linkcertkeyname = rsc_name
+        sslcertkey.link(session, ssl_link)
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+
+
+def ssl_unlink(session, sc_name):
+    try:
+        ssl_link = sslcertkey()
+        ssl_link.certkey = sc_name
+        sslcertkey.unlink(session, ssl_link)
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+
+
 def delete_ssl(session, name):
     try:
         ssl_cert = sslcertkey()
+        if sslcertkey.get(session, name).linkcertkeyname:
+            ssl_unlink(session, name)
         ssl_cert.delete(session, name)
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+
+
+def get_ssl(session, name):
+    try:
+        ssl = sslcertkey.get(session, name)
+        return ssl
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
     except Exception as exc:
