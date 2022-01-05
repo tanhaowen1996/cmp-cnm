@@ -134,7 +134,6 @@ class SSLSerializer(serializers.ModelSerializer):
     status = serializers.CharField(required=False)
     cert_begin_time = serializers.DateTimeField(required=False)
     cert_end_time = serializers.DateTimeField(required=False)
-    update_time = serializers.DateTimeField(required=False)
     tenant_id = serializers.UUIDField(required=False)
     tenant_name = serializers.CharField(required=False)
 
@@ -151,7 +150,6 @@ class SSLSerializer(serializers.ModelSerializer):
             'status',
             'cert_begin_time',
             'cert_end_time',
-            'update_time',
             'tenant_id',
             'tenant_name'
         )
