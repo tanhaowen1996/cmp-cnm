@@ -94,7 +94,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         ns_conn = NSMixin.get_session()
         instance = self.get_object()
         try:
-            instance.delete_cslb(ns_conn, request.data['name'])
+            instance.delete_cslb(ns_conn, instance.name)
         except nitro_exception as exc:
             logger.error(f"try Delete LoadBalance {instance.name} : {exc}")
             return Response({
@@ -666,7 +666,7 @@ class SSLViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         ns_conn = NSMixin.get_session()
         instance = self.get_object()
         try:
-            instance.delete_ssl(ns_conn, request.data['name'])
+            instance.delete_ssl(ns_conn, instance.name)
         except nitro_exception as exc:
             logger.error(f"try Delete LoadBalance {instance.name} : {exc}")
             return Response({
