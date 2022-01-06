@@ -47,8 +47,10 @@ def create_lb(session, name, address):
         csvserver.add(session, csvs)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def delete_lb(session, name):
@@ -57,8 +59,10 @@ def delete_lb(session, name):
         csvs_list.delete(session, name)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def get_lb(session, name):
@@ -67,8 +71,10 @@ def get_lb(session, name):
         return csvs.get(session, name)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def create_lb_listener_v4(session, name, address, port, protocol, lbmethod):
@@ -90,8 +96,10 @@ def create_lb_listener_v4(session, name, address, port, protocol, lbmethod):
         csvserver_cspolicy_binding.add(session, listener_policy)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def delete_lb_listener_v4(session, name):
@@ -101,8 +109,10 @@ def delete_lb_listener_v4(session, name):
         delete_lb_ture_policy(session, name)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def create_lb_listener_v7(session, name, address, port, protocol):
@@ -121,8 +131,10 @@ def create_lb_listener_v7(session, name, address, port, protocol):
         csvserver.add(session, lb_listener)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def add_ssl(session, ssl_name, listener_name):
@@ -133,8 +145,10 @@ def add_ssl(session, ssl_name, listener_name):
         sslvserver_sslcertkey_binding.add(session, csvs)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def delete_lb_listener_v7_check(session, name):
@@ -143,8 +157,10 @@ def delete_lb_listener_v7_check(session, name):
         return lb_policy
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def delete_lb_listener_v7(session, name):
@@ -153,8 +169,10 @@ def delete_lb_listener_v7(session, name):
         lb_listener.delete(session, name)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def create_lb_host(session, name, host, match_type, listener, protocol):
@@ -188,8 +206,10 @@ def create_lb_host(session, name, host, match_type, listener, protocol):
         csvserver_cspolicy_binding.add(session, csvs_host)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def delete_lb_host(session, lb_name, host_name):
@@ -200,8 +220,10 @@ def delete_lb_host(session, lb_name, host_name):
         delete_lb_action(session, host_name)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def create_lb_path(session, listener, name, match_type, host_match_type, protocol, lbmethod, lb_host, path='/'):
@@ -245,8 +267,10 @@ def create_lb_path(session, listener, name, match_type, host_match_type, protoco
         return name
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def delete_lb_path(session, csvs_name, path_name):
@@ -257,8 +281,10 @@ def delete_lb_path(session, csvs_name, path_name):
         delete_lb_action(session, path_name)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def create_lb_true_policy(session, address, port, protocol, lbmethod):
@@ -272,8 +298,10 @@ def create_lb_true_policy(session, address, port, protocol, lbmethod):
         cspolicy.add(session, lb_true_policy)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def delete_lb_ture_policy(session, name):
@@ -282,8 +310,10 @@ def delete_lb_ture_policy(session, name):
         delete_lb_action(session, name)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def delete_csvs_policy(session, csvs_name, policy_name):
@@ -294,8 +324,10 @@ def delete_csvs_policy(session, csvs_name, policy_name):
         csvserver_cspolicy_binding.delete(session, csvs)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def create_lb_action(session, name, protocol, lbmethod):
@@ -311,8 +343,10 @@ def create_lb_action(session, name, protocol, lbmethod):
         csaction.add(session, lb_action)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def delete_lb_action(session, name):
@@ -322,8 +356,10 @@ def delete_lb_action(session, name):
         delete_lb_vs(session, name)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def create_lb_vs(session, name, protocol, lbmethod):
@@ -342,8 +378,10 @@ def create_lb_vs(session, name, protocol, lbmethod):
         lbvserver.add(session, lb_vserver)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def delete_lb_vs(session, name):
@@ -353,8 +391,10 @@ def delete_lb_vs(session, name):
         lb_vserver.delete(session, lb_name)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def lb_vs_member_list(session, lb_vs_name):
@@ -369,8 +409,10 @@ def lb_vs_member_list(session, lb_vs_name):
             print("EXception::getservice ERROR")
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def lb_member_list(session):
@@ -386,8 +428,10 @@ def lb_member_list(session):
         return lb_member
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def add_lb_member(session, address, port, weight, protocol, vs_name):
@@ -405,8 +449,10 @@ def add_lb_member(session, address, port, weight, protocol, vs_name):
         lbvserver_service_binding.add(session, lb_member)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def delete_lb_member(session, name, member_name):
@@ -418,8 +464,10 @@ def delete_lb_member(session, name, member_name):
         lbvserver_service_binding.delete(session, lb_member)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def list_server(session):
@@ -432,8 +480,10 @@ def list_server(session):
         return lb_servers
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def create_lb_member(session, address, port, protocol):
@@ -455,8 +505,10 @@ def create_lb_member(session, address, port, protocol):
         lb_member.add(session, lb_member)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def import_ssl(session, name, cert, pkey):
@@ -475,8 +527,10 @@ def import_ssl(session, name, cert, pkey):
         sslcertkey.add(session, ssl_cert)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def import_root_ssl(session, name, cert):
@@ -491,8 +545,10 @@ def import_root_ssl(session, name, cert):
         sslcertkey.add(session, ssl_cert)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def ssl_link_root(session, sc_name, rsc_name):
@@ -503,8 +559,10 @@ def ssl_link_root(session, sc_name, rsc_name):
         sslcertkey.link(session, ssl_link)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def ssl_unlink(session, sc_name):
@@ -514,8 +572,10 @@ def ssl_unlink(session, sc_name):
         sslcertkey.unlink(session, ssl_link)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def delete_ssl(session, name):
@@ -526,8 +586,10 @@ def delete_ssl(session, name):
         ssl_cert.delete(session, name)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def get_ssl(session, name):
@@ -536,5 +598,7 @@ def get_ssl(session, name):
         return ssl
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
+        raise exc
