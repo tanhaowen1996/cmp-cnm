@@ -428,7 +428,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     queryset = LoadBalanceMember.objects.all()
 
     @action(detail=False, methods=['post'])
-    def add_mamber_v4(self, request, *args, **kwargs):
+    def add_member_v4(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -459,7 +459,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @action(detail=False, methods=['post'])
-    def add_mamber_v7(self, request, *args, **kwargs):
+    def add_member_v7(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
