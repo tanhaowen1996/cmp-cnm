@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -52,6 +53,12 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     filterset_class = LoadBalanceFilter
     serializer_class = LoadBalanceSerializer
     queryset = LoadBalance.objects.all()
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if not self.request.user.is_staff:
+            qs = qs.filter(tenant_id=self.request.account_info['tenantId'])
+        return qs
 
     def create(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
@@ -130,6 +137,12 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
 
             delete_v7:
             删除4层负载均衡监听
+
+            listener_list_v4:
+            需要传入p_id 参数
+
+            listener_list_v4:
+            需要传入p_id 参数
         """
     authentication_classes = (OSAuthentication,)
     filterset_class = LoadBalanceListenerFilter
@@ -235,10 +248,40 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             self.perform_destroy(instance)
             return Response(status=status.HTTP_201_CREATED)
 
+    def list_page(self, qs):
+        queryset = self.filter_queryset(qs)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return serializer
+
+        serializer = self.get_serializer(queryset, many=True)
+        return serializer
+
+    @action(detail=False, methods=['get'])
+    def listener_list_v4(self, request, *args, **kwargs):
+        qs = super().get_queryset()
+        if not self.request.user.is_staff:
+            qs = qs.filter(Q(lb_id=request.data['lb_id']) &
+                           (Q(protocol="TCP") | Q(protocol="UDP")))
+        serializer = self.list_page(qs)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['get'])
+    def listener_list_v7(self, request, *args, **kwargs):
+        qs = super().get_queryset()
+        if not self.request.user.is_staff:
+            qs = qs.filter(Q(lb_id=request.data['lb_id']) &
+                           (Q(protocol="HTTP") | Q(protocol="HTTPS")))
+        serializer = self.list_page(qs)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
 class LoadBalanceHostViewSet(viewsets.ModelViewSet):
     """
         list:
+        需要传入 listener_id 参数
         Get LB host
 
         create:
@@ -261,6 +304,13 @@ class LoadBalanceHostViewSet(viewsets.ModelViewSet):
     filterset_class = LoadBalanceHostFilter
     serializer_class = LoadBalanceHostSerializer
     queryset = LoadBalanceHost.objects.all()
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if not self.request.user.is_staff:
+            qs = qs.filter(listener_id=self.request.data['listener_id'])
+
+        return qs
 
     def create(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
@@ -313,6 +363,7 @@ class LoadBalanceHostViewSet(viewsets.ModelViewSet):
 class LoadBalancePathViewSet(viewsets.ModelViewSet):
     """
         list:
+        需要传入 host_id 参数
         Get LB path
 
         create:
@@ -336,6 +387,13 @@ class LoadBalancePathViewSet(viewsets.ModelViewSet):
     filterset_class = LoadBalancePathFilter
     serializer_class = LoadBalancePathSerializer
     queryset = LoadBalancePath.objects.all()
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if not self.request.user.is_staff:
+            qs = qs.filter(host_id=self.request.data['host_id'])
+
+        return qs
 
     def create(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
@@ -392,6 +450,7 @@ class LoadBalancePathViewSet(viewsets.ModelViewSet):
 class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     """
             list:
+            需要传入p_id 参数
             Get LB Member
 
             add_mamber_v4:
@@ -426,6 +485,13 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     filterset_class = LoadBalanceMemberFilter
     serializer_class = LoadBalanceMemberSerializer
     queryset = LoadBalanceMember.objects.all()
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if not self.request.user.is_staff:
+            qs = qs.filter(p_id=self.request.data['p_id'])
+
+        return qs
 
     @action(detail=False, methods=['post'])
     def add_member_v4(self, request, *args, **kwargs):
@@ -557,6 +623,12 @@ class SSLViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     filterset_class = SSLFilter
     serializer_class = SSLSerializer
     queryset = SSL.objects.all()
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if not self.request.user.is_staff:
+            qs = qs.filter(tenant_id=self.request.account_info['tenantId'])
+        return qs
 
     def create(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
