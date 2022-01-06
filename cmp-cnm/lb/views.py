@@ -139,10 +139,10 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             删除4层负载均衡监听
 
             listener_list_v4:
-            需要传入p_id 参数
+            需要传入lb_id 参数
 
             listener_list_v4:
-            需要传入p_id 参数
+            需要传入lb_id 参数
         """
     authentication_classes = (OSAuthentication,)
     filterset_class = LoadBalanceListenerFilter
