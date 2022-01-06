@@ -141,7 +141,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             listener_list_v4:
             需要传入lb_id 参数
 
-            listener_list_v4:
+            listener_list_v7:
             需要传入lb_id 参数
         """
     authentication_classes = (OSAuthentication,)
