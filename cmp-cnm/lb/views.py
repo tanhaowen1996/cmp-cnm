@@ -29,28 +29,24 @@ class OSCommonModelMixin:
 class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     """
         list:
-        Get list
+        Get LB list
 
         create:
-        Create instance
+        Create LB
+        需要传入参数如下：
+        name lb名称
+        net_type 网络类型
+        ip  负载均衡ip地址（非网段）
+        description  描述
 
         retrieve:
-        Get instance
+        Get LB
 
         update:
-        Update instance
+        无
 
         destroy:
-        drop instance
-
-        tenants:
-        set related tenant list for instance
-
-        release:
-        remove current tenant from the tenant list of instance
-
-        verbosity:
-        Get instance detail info
+        drop 负载均衡（需要保证负载均衡下无监听）
     """
     authentication_classes = (OSAuthentication,)
     filterset_class = LoadBalanceFilter
@@ -103,6 +99,38 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
 
 
 class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
+    """
+            list:
+            Get LB_listener
+
+            create_v4:
+            创建4层负载均衡
+            需要传入参数如下：
+            lb_id lb的id
+            port  需要监听的端口
+            protocol  4层负载均衡协议（TCP/UDP）
+            algorithm  监听策略（轮询 ROUNDROBIN ，最小连接数 LEASTCONNECTION）
+
+            create_v7:
+            创建7层负载均衡
+            需要传入参数如下：
+            lb_id lb的id
+            port  需要监听的端口
+            protocol  7层负载均衡协议（HTTP/HTTPS）
+            ssl  （HTTPS时需要传人证书名称）
+
+            retrieve:
+            Get LB_listener
+
+            update:
+            无
+
+            delete_v4:
+            删除4层负载均衡监听
+
+            delete_v7:
+            删除4层负载均衡监听
+        """
     authentication_classes = (OSAuthentication,)
     filterset_class = LoadBalanceListenerFilter
     serializer_class = LoadBalanceListenerSerializer
@@ -209,6 +237,26 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
 
 
 class LoadBalanceHostViewSet(viewsets.ModelViewSet):
+    """
+        list:
+        Get LB host
+
+        create:
+        Create LB host
+        需要传入参数如下：
+        host 域名
+        match_type 匹配模式（目前支持：包含：CONTAINS 等于：EQ）
+        listener_id  监听的id
+
+        retrieve:
+        Get LB HOST
+
+        update:
+        无
+
+        destroy:
+        drop 负载均衡域名
+    """
     authentication_classes = (OSAuthentication,)
     filterset_class = LoadBalanceHostFilter
     serializer_class = LoadBalanceHostSerializer
@@ -263,6 +311,27 @@ class LoadBalanceHostViewSet(viewsets.ModelViewSet):
 
 
 class LoadBalancePathViewSet(viewsets.ModelViewSet):
+    """
+        list:
+        Get LB path
+
+        create:
+        Create LB path
+        需要传入参数如下：
+        host_id 域名id
+        path   路径（默认为：/）
+        match_type 匹配模式（目前支持：包含：CONTAINS 等于：EQ）
+        algorithm  监听策略（轮询 ROUNDROBIN ，最小连接数 LEASTCONNECTION）
+
+        retrieve:
+        Get LB path
+
+        update:
+        无
+
+        destroy:
+        drop 负载均衡路径
+    """
     authentication_classes = (OSAuthentication,)
     filterset_class = LoadBalancePathFilter
     serializer_class = LoadBalancePathSerializer
@@ -321,6 +390,38 @@ class LoadBalancePathViewSet(viewsets.ModelViewSet):
 
 
 class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
+    """
+            list:
+            Get LB Member
+
+            add_mamber_v4:
+            添加 4层 LB member
+            需要传入参数如下：
+            p_id  4层负载均衡监听的id
+            ip    成员的地址
+            port  成员的端口
+            weight  成员的权重
+
+            add_mamber_v7:
+            添加 7层 LB member
+            需要传入参数如下：
+            p_id  7层负载均衡的path id
+            ip    成员的地址
+            port  成员的端口
+            weight  成员的权重
+
+            retrieve:
+            Get LB path
+
+            update:
+            无
+
+            delete_v4:
+            删除4层负载均衡监听成员
+
+            delete_v7:
+            删除4层负载均衡监听成员
+        """
     authentication_classes = (OSAuthentication,)
     filterset_class = LoadBalanceMemberFilter
     serializer_class = LoadBalanceMemberSerializer
@@ -430,6 +531,28 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
 
 
 class SSLViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
+    """
+        list:
+        Get SSL证书
+
+        create:
+        Create SSL证书
+        需要传入参数如下：
+        name ssl证书名称
+        cert ca证书
+        pkey 证书key
+        scope  证书权限（私有/公有）
+
+        retrieve:
+        Get LB
+
+        update:
+        无
+
+        destroy:
+        drop SSL证书
+    """
+
     authentication_classes = (OSAuthentication,)
     filterset_class = SSLFilter
     serializer_class = SSLSerializer
@@ -455,7 +578,7 @@ class SSLViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 name=data['name'],
                 cert=data['cert'],
                 pkey=data['pkey'],
-                scope="",
+                scope=data['scope'],
                 cert_typr="SVR",
                 domain=ssl.sandns,
                 status=ssl.status,
