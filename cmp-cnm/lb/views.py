@@ -262,18 +262,20 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def listener_list_v4(self, request, *args, **kwargs):
         qs = super().get_queryset()
-        if not self.request.user.is_staff:
-            qs = qs.filter(Q(lb_id=request.data['lb_id']) &
-                           (Q(protocol="TCP") | Q(protocol="UDP")))
+        if not request.GET.get('lb_id'):
+            qs = qs.filter(Q(protocol="TCP") | Q(protocol="UDP"))
+        else:
+            qs = qs.filter(Q(lb_id=request.GET.get('lb_id')) & (Q(protocol="TCP") | Q(protocol="UDP")))
         serializer = self.list_page(qs)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'])
     def listener_list_v7(self, request, *args, **kwargs):
         qs = super().get_queryset()
-        if not self.request.user.is_staff:
-            qs = qs.filter(Q(lb_id=request.data['lb_id']) &
-                           (Q(protocol="HTTP") | Q(protocol="HTTPS")))
+        if not request.GET.get('lb_id'):
+            qs = qs.filter(Q(protocol="HTTP") | Q(protocol="HTTPS"))
+        else:
+            qs = qs.filter(Q(lb_id=request.GET.get('lb_id')) & (Q(protocol="HTTP") | Q(protocol="HTTPS")))
         serializer = self.list_page(qs)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -307,8 +309,9 @@ class LoadBalanceHostViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if not self.request.user.is_staff:
-            qs = qs.filter(listener_id=self.request.data['listener_id'])
+        if not self.request.GET.get('listener_id'):
+            return qs
+        qs = qs.filter(listener_id=self.request.GET.get('listener_id'))
 
         return qs
 
@@ -390,8 +393,9 @@ class LoadBalancePathViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if not self.request.user.is_staff:
-            qs = qs.filter(host_id=self.request.data['host_id'])
+        if not self.request.GET.get('host_id'):
+            return qs
+        qs = qs.filter(host_id=self.request.GET.get('host_id'))
 
         return qs
 
@@ -488,8 +492,9 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if not self.request.user.is_staff:
-            qs = qs.filter(p_id=self.request.data['p_id'])
+        if not self.request.GET.get('p_id'):
+            return qs
+        qs = qs.filter(p_id=self.request.GET.get('p_id'))
 
         return qs
 
