@@ -94,6 +94,8 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         ns_conn = NSMixin.get_session()
         instance = self.get_object()
         try:
+            if LoadBalanceListener.objects.filter(lb_id=instance.id):
+                return Response(f"ERROR: You must delete {instance.id}: Listener", status=status.HTTP_400_BAD_REQUEST)
             instance.delete_cslb(ns_conn, instance.name)
         except nitro_exception as exc:
             logger.error(f"try Delete LoadBalance {instance.name} : {exc}")
@@ -643,7 +645,7 @@ class SSLViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         try:
             SSL.create_ssl(ns_conn, data['name'], data['cert'], data['pkey'])
         except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {data['name']} : {exc}")
+            logger.error(f"try Create SSL {data['name']} : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -656,11 +658,11 @@ class SSLViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 cert=data['cert'],
                 pkey=data['pkey'],
                 scope=data['scope'],
-                cert_typr="SVR",
+                cert_type="SVR",
                 domain=ssl.sandns,
                 status=ssl.status,
                 cert_begin_time=datetime.strptime(ssl.clientcertnotbefore, GMT_FORMAT),
-                cert_end_time=datetime.strptime(ssl.ssl.clientcertnotafter, GMT_FORMAT),
+                cert_end_time=datetime.strptime(ssl.clientcertnotafter, GMT_FORMAT),
                 tenant_id=request.account_info.get('tenantId'),
                 tenant_name=request.account_info.get('tenantName'),
             )
