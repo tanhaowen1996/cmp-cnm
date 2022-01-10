@@ -22,10 +22,11 @@ class LoadBalanceListenerFilter(FilterSet):
     id = CharFilter(field_name='id', lookup_expr='icontains')
     name = CharFilter(field_name='name', lookup_expr='icontains')
     protocol = CharFilter(field_name='protocol', lookup_expr='icontains')
+    ld_id = CharFilter(field_name="lb_id", lookup_expr='icontains')
 
     class Meta:
         mode = LoadBalanceListener
-        filter = ('name', 'id', 'protocol')
+        filter = ('name', 'id', 'protocol', 'lb_id')
 
 
 class LoadBalanceHostFilter(FilterSet):
