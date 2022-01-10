@@ -356,11 +356,13 @@ class SSL(models.Model):
         null=True,
         max_length=64
     )
-    cert_begin_time = models.DateTimeField(
-        null=True
+    cert_begin_time = models.CharField(
+        null=True,
+        max_length=255
     )
-    cert_end_time = models.DateTimeField(
-        null=True
+    cert_end_time = models.CharField(
+        null=True,
+        max_length=255
     )
     tenant_id = models.CharField(
         null=True,
@@ -387,7 +389,8 @@ class SSL(models.Model):
     @classmethod
     def create_ssl(cls, ns_session, name, cert, pkey):
         list_cert = cert.split("-----END CERTIFICATE-----")
-        list_cert.remove("\n")
+        if "" in list_cert:
+            list_cert.remove("")
         cert_sc = list_cert[0] + "-----END CERTIFICATE-----"
         citrix_client.import_ssl(session=ns_session, name=name, cert=cert_sc, pkey=pkey)
         if len(list_cert) == 2:
