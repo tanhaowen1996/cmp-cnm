@@ -9,6 +9,9 @@ from nssrc.com.citrix.netscaler.nitro.resource.config.basic.service import servi
 from nssrc.com.citrix.netscaler.nitro.resource.config.basic.server import server
 from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslcertkey import sslcertkey
 from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslvserver_sslcertkey_binding import sslvserver_sslcertkey_binding
+from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslkeyfile import sslkeyfile
+from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslcertfile import sslcertfile
+from nssrc.com.citrix.netscaler.nitro.resource.config.network.vlan import vlan
 import os
 
 """
@@ -457,11 +460,26 @@ def add_lb_member(session, address, port, weight, protocol, vs_name):
 
 def delete_lb_member(session, name, member_name):
     try:
-
         lb_member = lbvserver_service_binding()
         lb_member.name = name
         lb_member.servicename = member_name
         lbvserver_service_binding.delete(session, lb_member)
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+        raise exc
+
+
+def update_lb_member(session, name, member_name, weight):
+    try:
+        lb_member = lbvserver_service_binding()
+        lb_member.name = name
+        lb_member.servicename = member_name
+        lbvserver_service_binding.delete(session, lb_member)
+        lb_member.weight = weight
+        lbvserver_service_binding.add(session, lb_member)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
@@ -511,17 +529,28 @@ def create_lb_member(session, address, port, protocol):
         raise exc
 
 
+def ssl_file(session, cert, name):
+    ssl = sslcertfile()
+    ssl.name = name
+    with open("/tmp/{0}.crt".format(name), 'w') as cert_file:
+        cert_file.write(cert)
+    cert_file.close()
+    os.path = "/tmp/"
+    ssl.src = "{0}.crt".format(name)
+    sslcertfile.Import(ssl)
+
+
 def import_ssl(session, name, cert, pkey):
     try:
         ssl_cert = sslcertkey()
         ssl_cert.certkey = name
-        with open("/tmp/{0}.crt".format(name), 'w') as cert_file:
-            cert_file.write(cert)
-        cert_file.close()
-        with open("/tmp/{0}.key".format(name), 'w') as key_file:
-            key_file.write(pkey)
-        key_file.close()
-        os.path = "/tmp/"
+        # os.path = "/tmp/"
+        # with open("/tmp/{0}.crt".format(name), 'w') as cert_file:
+        #     cert_file.write(cert)
+        # cert_file.close()
+        # with open("/tmp/{0}.key".format(name), 'w') as key_file:
+        #     key_file.write(pkey)
+        # key_file.close()
         ssl_cert.cert = "{0}.crt".format(name)
         ssl_cert.key = "{0}.key".format(name)
         sslcertkey.add(session, ssl_cert)
@@ -537,10 +566,10 @@ def import_root_ssl(session, name, cert):
     try:
         ssl_cert = sslcertkey()
         ssl_cert.certkey = name
-        with open("/tmp/{0}.crt".format(name), 'w') as cert_file:
-            cert_file.write(cert)
-        cert_file.close()
-        os.path = "/tmp/"
+        # with open("/tmp/{0}.crt".format(name), 'w') as cert_file:
+        #     cert_file.write(cert)
+        # cert_file.close()
+        # os.path = "/tmp/"
         ssl_cert.cert = "{0}.crt".format(name)
         sslcertkey.add(session, ssl_cert)
     except nitro_exception as exc:
@@ -602,3 +631,9 @@ def get_ssl(session, name):
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
         raise exc
+
+
+def create_vlan(session, name, vlan_id):
+    vlan_new = vlan()
+    vlan_new.id = vlan_id
+    vlan_new.vlantd
