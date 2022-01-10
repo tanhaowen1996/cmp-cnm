@@ -132,8 +132,8 @@ class SSLSerializer(serializers.ModelSerializer):
     cert = serializers.CharField(required=False)
     pkey = serializers.CharField(required=False)
     status = serializers.CharField(required=False)
-    cert_begin_time = serializers.DateTimeField(required=False)
-    cert_end_time = serializers.DateTimeField(required=False)
+    cert_begin_time = serializers.CharField(required=False)
+    cert_end_time = serializers.CharField(required=False)
     tenant_id = serializers.UUIDField(required=False)
     tenant_name = serializers.CharField(required=False)
 
