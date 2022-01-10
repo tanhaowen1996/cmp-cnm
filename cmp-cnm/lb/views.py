@@ -479,7 +479,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             Get LB path
 
             update:
-            无
+            修改负载均衡成员权重
 
             delete_v4:
             删除4层负载均衡监听成员
@@ -594,13 +594,55 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             member_name = instance.ip + ":" + str(instance.port) + "-" + listener.protocol
             instance.delete_lb_member(ns_conn, lbvs_name=lbvs_name, member_name=member_name)
         except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {instance.id} : {exc}")
+            logger.error(f"try Delete LoadBalance v7 members {instance.ip} : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
         else:
             self.perform_destroy(instance)
             return Response(status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'])
+    def update_v4(self, request, *args, **kwargs):
+        ns_conn = NSMixin.get_session()
+        instance = self.get_object()
+        try:
+            listener = LoadBalanceListener.objects.get(id=instance.p_id)
+            lbvs_name = listener.name + "-lbvs"
+            member_name = instance.ip + ":" + str(instance.port) + "-" + listener.protocol
+            instance.update_lb_member(ns_conn, lbvs_name, member_name, request.data['weight'])
+            serializer = self.get_serializer(instance, data=request.data)
+            serializer.is_valid(raise_exception=True)
+        except nitro_exception as exc:
+            logger.error(f"try update LoadBalance  members {instance.ip} : {exc}")
+            return Response({
+                "detail": f"{exc}"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            self.perform_update(serializer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'])
+    def update_v7(self, request, *args, **kwargs):
+        ns_conn = NSMixin.get_session()
+        instance = self.get_object()
+        try:
+            path = LoadBalancePath.objects.get(id=instance.p_id)
+            host = LoadBalanceHost.objects.get(id=path.host_id)
+            listener = LoadBalanceListener.objects.get(id=host.listener_id)
+            lbvs_name = path.name + "-lbvs"
+            member_name = instance.ip + ":" + str(instance.port) + "-" + listener.protocol
+            instance.update_lb_member(ns_conn, lbvs_name, member_name, request.data['weight'])
+            serializer = self.get_serializer(instance, data=request.data)
+            serializer.is_valid(raise_exception=True)
+        except nitro_exception as exc:
+            logger.error(f"try update LoadBalance  members {instance.ip} : {exc}")
+            return Response({
+                "detail": f"{exc}"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            self.perform_update(serializer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class SSLViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
@@ -675,7 +717,7 @@ class SSLViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         try:
             instance.delete_ssl(ns_conn, instance.name)
         except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {instance.name} : {exc}")
+            logger.error(f"try Delete SSL {instance.name} : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
