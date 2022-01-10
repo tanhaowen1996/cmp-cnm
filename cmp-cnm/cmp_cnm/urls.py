@@ -29,7 +29,7 @@ router.register(r'lb_listener', LoadBalanceListenerViewSet, basename='load_balan
 router.register(r'lb_host', LoadBalanceHostViewSet, basename='load_balance_host')
 router.register(r'lb_path', LoadBalancePathViewSet, basename='load_balance_path')
 router.register(r'lb_member', LoadBalanceMemberViewSet, basename='load_balance_member')
-router.register(r'SSL', SSLViewSet, basename='SSL')
+router.register(r'ssl', SSLViewSet, basename='SSL')
 
 urlpatterns = [
     path('v2/', include(router.urls)),
