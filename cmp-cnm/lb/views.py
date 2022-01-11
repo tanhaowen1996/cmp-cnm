@@ -610,7 +610,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             listener = LoadBalanceListener.objects.get(id=instance.p_id)
             lbvs_name = listener.name + "-lbvs"
             member_name = instance.ip + ":" + str(instance.port) + "-" + listener.protocol
-            instance.update_lb_member(ns_conn, lbvs_name, member_name, request.data['weight'])
+            instance.update_lb_member(ns_conn, lbvs_name, member_name, request.data['ip'], request.data['port'], request.data['weight'], listener.protocol)
             serializer = self.get_serializer(instance, data=request.data)
             serializer.is_valid(raise_exception=True)
         except nitro_exception as exc:
@@ -632,7 +632,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             listener = LoadBalanceListener.objects.get(id=host.listener_id)
             lbvs_name = path.name + "-lbvs"
             member_name = instance.ip + ":" + str(instance.port) + "-" + listener.protocol
-            instance.update_lb_member(ns_conn, lbvs_name, member_name, request.data['weight'])
+            instance.update_lb_member(ns_conn, lbvs_name, member_name, request.data['ip'], request.data['port'], request.data['weight'], listener.protocol)
             serializer = self.get_serializer(instance, data=request.data)
             serializer.is_valid(raise_exception=True)
         except nitro_exception as exc:
