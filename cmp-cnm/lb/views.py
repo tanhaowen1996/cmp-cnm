@@ -199,21 +199,26 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                                                       port=data['port'],
                                                       protocol=data['protocol'])
             if data['protocol'] == "HTTPS":
-                ssl = data['ssl']
-                LoadBalanceListener.add_ssl(ns_conn, ssl_name=ssl, listener_name=lb_listener_name)
+                ssl = SSL.objects.get(data['ssl_id'])
+                ssl_name = ssl.name
+                LoadBalanceListener.add_ssl(ns_conn, ssl_name=ssl_name, listener_name=lb_listener_name)
         except nitro_exception as exc:
             logger.error(f"try creating LoadBalance {data['name']} : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
         else:
+            ssl_id = ""
+            if data['protocol'] == "HTTPS":
+                ssl_id = ssl.id
             serializer.save(
                 name=lb_listener_name,
                 lb_id=data['lb_id'],
                 protocol=data['protocol'],
                 port=data['port'],
                 type="7层",
-                pip=lb.net_type
+                pip=lb.net_type,
+                ssl_id=ssl_id
             )
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
