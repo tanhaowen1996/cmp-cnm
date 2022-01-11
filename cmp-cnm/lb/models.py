@@ -322,8 +322,8 @@ class LoadBalanceMember(models.Model):
     def delete_lb_member(self, ns_session, lbvs_name, member_name):
         citrix_client.delete_lb_member(session=ns_session, name=lbvs_name, member_name=member_name)
 
-    def update_lb_member(self, ns_session, lbvs_name, member_name, weight):
-        citrix_client.update_lb_member(ns_session, lbvs_name, member_name, weight)
+    def update_lb_member(self, ns_session, lbvs_name, member_name, ip, port, weight, protocol):
+        citrix_client.update_lb_member(ns_session, lbvs_name, member_name, ip, port, weight, protocol)
 
 
 class SSL(models.Model):
