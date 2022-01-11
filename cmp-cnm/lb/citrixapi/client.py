@@ -472,18 +472,19 @@ def delete_lb_member(session, name, member_name):
         raise exc
 
 
-def update_lb_member(session, name, member_name, weight):
+def update_lb_member(session, name, member_name, ip, port, weight, protocol):
     try:
         lb_member = lbvserver_service_binding()
         lb_member.name = name
         lb_member.servicename = member_name
         lbvserver_service_binding.delete(session, lb_member)
-        lb_member.weight = weight
-        lbvserver_service_binding.add(session, lb_member)
+        add_lb_member(session, ip, port, weight, protocol, name)
     except nitro_exception as exc:
+        lbvserver_service_binding.add(session, lb_member)
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
     except Exception as exc:
+        lbvserver_service_binding.add(session, lb_member)
         print("Exception::message=" + str(exc.args))
         raise exc
 
