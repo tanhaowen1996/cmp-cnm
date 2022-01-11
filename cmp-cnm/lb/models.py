@@ -111,9 +111,8 @@ class LoadBalanceListener(models.Model):
         max_length=64
     )
     # pip 取值：0：ingress, 1: egress, 2: address, 3: nwclss, 4: disable
-    ssl_id = models.CharField(
+    ssl_id = models.UUIDField(
         null=True,
-        max_length=16
     )
     algorithm = models.CharField(
         null=True,
