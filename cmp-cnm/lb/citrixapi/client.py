@@ -530,15 +530,33 @@ def create_lb_member(session, address, port, protocol):
         raise exc
 
 
-def ssl_file(session, cert, name):
-    ssl = sslcertfile()
-    ssl.name = name
-    with open("/tmp/{0}.crt".format(name), 'w') as cert_file:
-        cert_file.write(cert)
-    cert_file.close()
-    os.path = "/tmp/"
-    ssl.src = "{0}.crt".format(name)
-    sslcertfile.Import(ssl)
+def ssl_key_file(session, key, name):
+    try:
+        ssl = sslkeyfile()
+        ssl.name = "{0}.key".format(name)
+        ssl.src = "http://10.67.85.5:8088/{0}.key".format(name)
+        sslkeyfile.Import(session, ssl)
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+        raise exc
+
+
+def ssl_cert_file(session, cert, name):
+    try:
+
+        ssl = sslcertfile()
+        ssl.name = "{0}.crt".format(name)
+        ssl.src = "http://10.67.85.5:8088/{0}.crt".format(name)
+        sslcertfile.Import(session, ssl)
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def import_ssl(session, name, cert, pkey):
@@ -575,10 +593,10 @@ def import_root_ssl(session, name, cert):
         sslcertkey.add(session, ssl_cert)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
-        raise exc
+        # raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
-        raise exc
+        # raise exc
 
 
 def ssl_link_root(session, sc_name, rsc_name):
