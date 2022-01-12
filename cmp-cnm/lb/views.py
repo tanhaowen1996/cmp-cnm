@@ -199,11 +199,11 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                                                       port=data['port'],
                                                       protocol=data['protocol'])
             if data['protocol'] == "HTTPS":
-                ssl = SSL.objects.get(data['ssl_id'])
+                ssl = SSL.objects.get(id=data['ssl_id'])
                 ssl_name = ssl.name
                 LoadBalanceListener.add_ssl(ns_conn, ssl_name=ssl_name, listener_name=lb_listener_name)
         except nitro_exception as exc:
-            logger.error(f"try creating LoadBalance {data['name']} : {exc}")
+            logger.error(f"try creating LoadBalance Listener : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -229,7 +229,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         instance = self.get_object()
         try:
             if LoadBalanceMember.objects.filter(p_id=instance.id):
-                return Response(f"ERROR: You must delete {instance.id}: Listener", status=status.HTTP_400_BAD_REQUEST)
+                return Response(f"ERROR: You must delete {instance.id}: Member", status=status.HTTP_400_BAD_REQUEST)
             instance.delete_lb_listenet_v4(ns_session=ns_conn, name=instance.name)
         except nitro_exception as exc:
             logger.error(f"try Delete LoadBalance {instance.id} : {exc}")
