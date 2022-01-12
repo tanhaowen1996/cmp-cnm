@@ -208,7 +208,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
         else:
-            ssl_id = ""
+            ssl_id = None
             if data['protocol'] == "HTTPS":
                 ssl_id = ssl.id
             serializer.save(
@@ -524,7 +524,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                                          protocol=protocol,
                                          vs_name=lbvs_name)
         except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {data['']} : {exc}")
+            logger.error(f"try add LoadBalance member v4 : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -557,7 +557,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                                          protocol=protocol,
                                          vs_name=lbvs_name)
         except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {data['']} : {exc}")
+            logger.error(f"try add LoadBalance member : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
