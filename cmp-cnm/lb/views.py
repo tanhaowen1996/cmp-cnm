@@ -104,7 +104,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
         else:
             self.perform_destroy(instance)
-            return Response(status=status.HTTP_201_CREATED)
+            return Response("删除成功", status=status.HTTP_201_CREATED)
 
 
 class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
@@ -126,7 +126,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             lb_id lb的id
             port  需要监听的端口
             protocol  7层负载均衡协议（HTTP/HTTPS）
-            ssl  （HTTPS时需要传人证书名称）
+            ssl_id  （HTTPS时需要传人证书id）
 
             retrieve:
             Get LB_listener
@@ -236,7 +236,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
         else:
             self.perform_destroy(instance)
-            return Response(status=status.HTTP_201_CREATED)
+            return Response("删除成功", status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'])
     def delete_v7(self, request, *args, **kwargs):
@@ -253,7 +253,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
         else:
             self.perform_destroy(instance)
-            return Response(status=status.HTTP_201_CREATED)
+            return Response("删除成功", status=status.HTTP_201_CREATED)
 
     def list_page(self, qs):
         queryset = self.filter_queryset(qs)
@@ -367,7 +367,7 @@ class LoadBalanceHostViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
         else:
             self.perform_destroy(instance)
-            return Response(status=status.HTTP_201_CREATED)
+            return Response("删除成功", status=status.HTTP_201_CREATED)
 
 
 class LoadBalancePathViewSet(viewsets.ModelViewSet):
@@ -455,7 +455,7 @@ class LoadBalancePathViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
         else:
             self.perform_destroy(instance)
-            return Response(status=status.HTTP_201_CREATED)
+            return Response("删除成功", status=status.HTTP_201_CREATED)
 
 
 class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
@@ -585,7 +585,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
         else:
             self.perform_destroy(instance)
-            return Response(status=status.HTTP_201_CREATED)
+            return Response("删除成功", status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['delete'])
     def delete_v7(self, request, *args, **kwargs):
@@ -605,7 +605,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
         else:
             self.perform_destroy(instance)
-            return Response(status=status.HTTP_201_CREATED)
+            return Response("删除成功", status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'])
     def update_v4(self, request, *args, **kwargs):
@@ -728,5 +728,5 @@ class SSLViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
         else:
             self.perform_destroy(instance)
-            return Response(status=status.HTTP_201_CREATED)
+            return Response("删除成功", status=status.HTTP_201_CREATED)
 
