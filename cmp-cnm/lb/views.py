@@ -223,11 +223,13 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['delete'])
     def delete_v4(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
         instance = self.get_object()
         try:
+            if LoadBalanceMember.objects.filter(p_id=instance.id):
+                return Response(f"ERROR: You must delete {instance.id}: Listener", status=status.HTTP_400_BAD_REQUEST)
             instance.delete_lb_listenet_v4(ns_session=ns_conn, name=instance.name)
         except nitro_exception as exc:
             logger.error(f"try Delete LoadBalance {instance.id} : {exc}")
@@ -238,7 +240,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             self.perform_destroy(instance)
             return Response("删除成功", status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['delete'])
     def delete_v7(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
         instance = self.get_object()
