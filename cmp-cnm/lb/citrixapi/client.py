@@ -12,7 +12,7 @@ from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslvserver_sslcertkey_
 from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslkeyfile import sslkeyfile
 from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslcertfile import sslcertfile
 from nssrc.com.citrix.netscaler.nitro.resource.config.network.vlan import vlan
-from cmp_cnm.settings import URL
+from cmp_cnm.settings import URL, WEB_PORT
 import os
 
 """
@@ -539,7 +539,7 @@ def ssl_key_file(session, pkey, name):
         key_file.close()
         ssl = sslkeyfile()
         ssl.name = "{0}.key".format(name)
-        ssl.src = "http://{0}/media/{1}.key".format(URL, name)
+        ssl.src = "http://10.209.0.173:{0}/media/{1}.key".format(WEB_PORT, name)
         sslkeyfile.Import(session, ssl)
         os.system("rm -f /opt/media/{0}.key".format(name))
     except nitro_exception as exc:
@@ -557,7 +557,7 @@ def ssl_cert_file(session, cert, name):
         cert_file.close()
         ssl = sslcertfile()
         ssl.name = "{0}.crt".format(name)
-        ssl.src = "http://{0}/media/{1}.crt".format(URL, name)
+        ssl.src = "http://10.209.0.173:{0}/media/{1}.crt".format(WEB_PORT, name)
         sslcertfile.Import(session, ssl)
         os.system("rm -f /opt/media/{0}.crt".format(name))
     except nitro_exception as exc:
