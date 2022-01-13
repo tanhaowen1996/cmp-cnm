@@ -539,9 +539,9 @@ def ssl_key_file(session, pkey, name):
         key_file.close()
         ssl = sslkeyfile()
         ssl.name = "{0}.key".format(name)
-        ssl.src = "http://10.209.0.173:{0}/media/{1}.key".format(WEB_PORT, name)
+        ssl.src = "http://{0}/media/{1}.key".format(URL, name)
         sslkeyfile.Import(session, ssl)
-        # os.system("rm -f /opt/media/{0}.key".format(name))
+        os.system("rm -f /opt/media/{0}.key".format(name))
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
@@ -557,9 +557,9 @@ def ssl_cert_file(session, cert, name):
         cert_file.close()
         ssl = sslcertfile()
         ssl.name = "{0}.crt".format(name)
-        ssl.src = "http://10.209.0.173:{0}/media/{1}.crt".format(WEB_PORT, name)
+        ssl.src = "http://{0}/media/{1}.crt".format(URL, name)
         sslcertfile.Import(session, ssl)
-        # os.system("rm -f /opt/media/{0}.crt".format(name))
+        os.system("rm -f /opt/media/{0}.crt".format(name))
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
