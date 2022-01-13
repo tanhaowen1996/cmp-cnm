@@ -21,6 +21,8 @@ from rest_framework.routers import SimpleRouter
 from lb.views import LoadBalanceViewSet, LoadBalanceListenerViewSet, \
                      LoadBalanceHostViewSet, LoadBalancePathViewSet, \
                      LoadBalanceMemberViewSet, SSLViewSet
+from cmp_cnm.settings import MEDIA_ROOT
+from django.views.static import serve
 
 
 router = SimpleRouter(trailing_slash=False)
@@ -34,6 +36,7 @@ router.register(r'ssl', SSLViewSet, basename='SSL')
 urlpatterns = [
     path('v2/', include(router.urls)),
     path('admin/', admin.site.urls),
+    re_path('^media/(?P<path>.*)$', serve, {'document_root': MEDIA_ROOT}),
 ]
 
 if getattr(settings, 'SWAGGER', False):
