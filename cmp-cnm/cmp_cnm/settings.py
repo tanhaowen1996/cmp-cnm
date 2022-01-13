@@ -74,7 +74,7 @@ ROOT_URLCONF = 'cmp_cnm.urls'
 HEALTH_CHECK_PATH = os.getenv('HEALTH_CHECK_PATH', '/health')
 
 
-URL = os.getenv("URL", "10.67.85.5:8080")
+URL = os.getenv("URL", "127.0.0.1:8080")
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 TEMPLATES = [
