@@ -12,6 +12,7 @@ from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslvserver_sslcertkey_
 from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslkeyfile import sslkeyfile
 from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslcertfile import sslcertfile
 from nssrc.com.citrix.netscaler.nitro.resource.config.network.vlan import vlan
+from cmp_cnm.settings import URL
 import os
 
 """
@@ -126,6 +127,7 @@ def create_lb_listener_v7(session, name, address, port, protocol):
         protocol_lb = protocol
         if protocol == "HTTPS":
             protocol_lb = "SSL"
+        print(protocol_lb)
         lb_listener = csvserver()
         lb_listener.name = name
         lb_listener.servicetype = protocol_lb
@@ -530,12 +532,16 @@ def create_lb_member(session, address, port, protocol):
         raise exc
 
 
-def ssl_key_file(session, key, name):
+def ssl_key_file(session, pkey, name):
     try:
+        with open("/opt/cmp-cnm/cmp-cnm/media/{0}.key".format(name), 'w') as key_file:
+            key_file.write(pkey)
+        key_file.close()
         ssl = sslkeyfile()
         ssl.name = "{0}.key".format(name)
-        ssl.src = "http://10.67.85.5:8088/{0}.key".format(name)
+        ssl.src = "http://{0}/media/{1}.key".format(URL, name)
         sslkeyfile.Import(session, ssl)
+        os.system("rm -f /opt/cmp-cnm/cmp-cnm/media/{0}.key".format(name))
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
@@ -546,11 +552,14 @@ def ssl_key_file(session, key, name):
 
 def ssl_cert_file(session, cert, name):
     try:
-
+        with open("/opt/cmp-cnm/cmp-cnm/media/{0}.crt".format(name), 'w') as cert_file:
+            cert_file.write(cert)
+        cert_file.close()
         ssl = sslcertfile()
         ssl.name = "{0}.crt".format(name)
-        ssl.src = "http://10.67.85.5:8088/{0}.crt".format(name)
+        ssl.src = "http://{0}/media/{1}.crt".format(URL, name)
         sslcertfile.Import(session, ssl)
+        os.system("rm -f /opt/cmp-cnm/cmp-cnm/media/{0}.crt".format(name))
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
@@ -563,13 +572,8 @@ def import_ssl(session, name, cert, pkey):
     try:
         ssl_cert = sslcertkey()
         ssl_cert.certkey = name
-        # os.path = "/tmp/"
-        # with open("/tmp/{0}.crt".format(name), 'w') as cert_file:
-        #     cert_file.write(cert)
-        # cert_file.close()
-        # with open("/tmp/{0}.key".format(name), 'w') as key_file:
-        #     key_file.write(pkey)
-        # key_file.close()
+        ssl_cert_file(session, cert, name)
+        ssl_key_file(session, pkey, name)
         ssl_cert.cert = "{0}.crt".format(name)
         ssl_cert.key = "{0}.key".format(name)
         sslcertkey.add(session, ssl_cert)
@@ -585,10 +589,7 @@ def import_root_ssl(session, name, cert):
     try:
         ssl_cert = sslcertkey()
         ssl_cert.certkey = name
-        # with open("/tmp/{0}.crt".format(name), 'w') as cert_file:
-        #     cert_file.write(cert)
-        # cert_file.close()
-        # os.path = "/tmp/"
+        ssl_cert_file(session, cert, name)
         ssl_cert.cert = "{0}.crt".format(name)
         sslcertkey.add(session, ssl_cert)
     except nitro_exception as exc:
