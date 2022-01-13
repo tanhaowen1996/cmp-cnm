@@ -75,6 +75,7 @@ HEALTH_CHECK_PATH = os.getenv('HEALTH_CHECK_PATH', '/health')
 
 
 URL = os.getenv("URL", "127.0.0.1:8080")
+WEB_PORT = os.getenv("WEB_PORT", 8080)
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 TEMPLATES = [
