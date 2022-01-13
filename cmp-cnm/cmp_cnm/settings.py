@@ -73,14 +73,19 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'cmp_cnm.urls'
 HEALTH_CHECK_PATH = os.getenv('HEALTH_CHECK_PATH', '/health')
 
+
+URL = os.getenv("URL", "10.67.85.5:8080")
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
+                'django.template.context_processors.media',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
