@@ -534,14 +534,14 @@ def create_lb_member(session, address, port, protocol):
 
 def ssl_key_file(session, pkey, name):
     try:
-        with open("/opt/cmp-cnm/media/{0}.key".format(name), 'w') as key_file:
+        with open("/opt/media/{0}.key".format(name), 'w') as key_file:
             key_file.write(pkey)
         key_file.close()
         ssl = sslkeyfile()
         ssl.name = "{0}.key".format(name)
         ssl.src = "http://{0}/media/{1}.key".format(URL, name)
         sslkeyfile.Import(session, ssl)
-        os.system("rm -f /opt/cmp-cnm/media/{0}.key".format(name))
+        os.system("rm -f /opt/media/{0}.key".format(name))
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
@@ -552,14 +552,14 @@ def ssl_key_file(session, pkey, name):
 
 def ssl_cert_file(session, cert, name):
     try:
-        with open("/opt/cmp-cnm/media/{0}.crt".format(name), 'w') as cert_file:
+        with open("/opt/media/{0}.crt".format(name), 'w') as cert_file:
             cert_file.write(cert)
         cert_file.close()
         ssl = sslcertfile()
         ssl.name = "{0}.crt".format(name)
         ssl.src = "http://{0}/media/{1}.crt".format(URL, name)
         sslcertfile.Import(session, ssl)
-        os.system("rm -f /opt/cmp-cnm/media/{0}.crt".format(name))
+        os.system("rm -f /opt/media/{0}.crt".format(name))
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
