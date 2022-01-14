@@ -11,7 +11,7 @@ MAX_REQUESTS=${MAX_REQUESTS:=5000}
 if [ "asgi" = "$SERVICE_MODE" ]; then
     gunicorn cmp_cnm.asgi -b :$WEB_PORT -k uvicorn.workers.UvicornWorker -w $WEB_CONCURRENCY --max-requests $MAX_REQUESTS
 elif [ "django" = "$SERVICE_MODE" ]; then
-    ./manage.py runserver 0:$WEB_PORT
+    ./manage.py runserver 0.0.0.0:$WEB_PORT
 else
     echo "unknown mode: $SERVICE_MODE"
 fi
