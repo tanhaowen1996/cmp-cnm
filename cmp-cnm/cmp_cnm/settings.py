@@ -78,6 +78,7 @@ URL = os.getenv("URL", "127.0.0.1:8080")
 WEB_PORT = os.getenv("WEB_PORT", 8080)
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
