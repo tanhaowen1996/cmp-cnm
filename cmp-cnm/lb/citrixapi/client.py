@@ -11,8 +11,7 @@ from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslcertkey import sslc
 from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslvserver_sslcertkey_binding import sslvserver_sslcertkey_binding
 from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslkeyfile import sslkeyfile
 from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslcertfile import sslcertfile
-from nssrc.com.citrix.netscaler.nitro.resource.config.network.vlan import vlan
-from cmp_cnm.settings import URL, WEB_PORT
+from cmp_cnm.settings import HTTP_FILE
 import os
 
 """
@@ -537,9 +536,10 @@ def ssl_key_file(session, pkey, name):
         with open("/opt/media/{0}.key".format(name), 'w') as key_file:
             key_file.write(pkey)
         key_file.close()
+        os.system("curl -F file=@/opt/media/{0}.key {1}/".format(name, HTTP_FILE))
         ssl = sslkeyfile()
         ssl.name = "{0}.key".format(name)
-        ssl.src = "http://{0}/media/{1}.key".format(URL, name)
+        ssl.src = "http://{0}/{1}.key".format(HTTP_FILE, name)
         sslkeyfile.Import(session, ssl)
         os.system("rm -f /opt/media/{0}.key".format(name))
     except nitro_exception as exc:
@@ -555,9 +555,10 @@ def ssl_cert_file(session, cert, name):
         with open("/opt/media/{0}.crt".format(name), 'w') as cert_file:
             cert_file.write(cert)
         cert_file.close()
+        os.system("curl -F file=@/opt/media/{0}.crt {1}/".format(name, HTTP_FILE))
         ssl = sslcertfile()
         ssl.name = "{0}.crt".format(name)
-        ssl.src = "http://{0}/media/{1}.crt".format(URL, name)
+        ssl.src = "http://{0}/{1}.crt".format(HTTP_FILE, name)
         sslcertfile.Import(session, ssl)
         os.system("rm -f /opt/media/{0}.crt".format(name))
     except nitro_exception as exc:
@@ -651,9 +652,3 @@ def get_ssl(session, name):
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
         raise exc
-
-
-def create_vlan(session, name, vlan_id):
-    vlan_new = vlan()
-    vlan_new.id = vlan_id
-    vlan_new.vlantd
