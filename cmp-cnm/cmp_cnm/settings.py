@@ -228,6 +228,7 @@ NS_PROTOCOL = os.getenv('NS_PROTOCOL', 'http')
 NS_USER = os.getenv('NS_USER', '')
 NS_PASSWD = os.getenv('NS_PASSWD', '')
 NS_TIME = os.getenv('NS_TIME', 3600)
+HTTP_FILE = os.getenv('HTTP_FILE', '127.0.0.1')
 
 ACCOUNT_INFO_KEY = os.getenv('ACCOUNT_INFO_KEY', 'Account-Info')
 
