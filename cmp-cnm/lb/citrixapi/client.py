@@ -11,6 +11,9 @@ from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslcertkey import sslc
 from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslvserver_sslcertkey_binding import sslvserver_sslcertkey_binding
 from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslkeyfile import sslkeyfile
 from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslcertfile import sslcertfile
+from nssrc.com.citrix.netscaler.nitro.resource.config.network.vlan import vlan
+from nssrc.com.citrix.netscaler.nitro.resource.config.network.vlan_interface_binding import vlan_interface_binding
+from nssrc.com.citrix.netscaler.nitro.resource.config.ns.nsip import nsip
 from cmp_cnm.settings import HTTP_FILE
 import os
 
@@ -646,6 +649,41 @@ def get_ssl(session, name):
     try:
         ssl = sslcertkey.get(session, name)
         return ssl
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+        raise exc
+
+
+def create_vlan(session, vlan_id, vlan_name):
+    try:
+        new_vlan = vlan()
+        new_vlan.id = vlan_id
+        new_vlan.aliasname = vlan_name
+        vlan.add(session, new_vlan)
+        vlan_bindings = vlan_interface_binding()
+        vlan_bindings.id = vlan_id
+        vlan_bindings.vlan_interface_bindings = "LA/1"
+        vlan_bindings.tagged = True
+        vlan_bindings.ifnum = "LA/1"
+        vlan_interface_binding.add(session, vlan_bindings)
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+        raise exc
+
+
+def add_snip(session, ip, netmask):
+    try:
+        new_ip = nsip()
+        new_ip.type = "SNIP"
+        new_ip.ipaddress = ip
+        new_ip.netmask = netmask
+        nsip.add(session, new_ip)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
