@@ -167,7 +167,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                                                       protocol=data['protocol'],
                                                       lbmethod=data['algorithm'])
         except nitro_exception as exc:
-            logger.error(f"try creating LoadBalance Listeber {data['name']} : {exc}")
+            logger.error(f"try creating LoadBalance Listener {data['name']} : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -232,7 +232,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 return Response({"detail": f"ERROR: You must delete {instance.id}: Members"}, status=status.HTTP_400_BAD_REQUEST)
             instance.delete_lb_listenet_v4(ns_session=ns_conn, name=instance.name)
         except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {instance.id} : {exc}")
+            logger.error(f"try Delete LoadBalance Listener {instance.id} : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -249,7 +249,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 return Response({"detail": f"ERROR: You must delete {instance.id}: Hosts"}, status=status.HTTP_400_BAD_REQUEST)
             instance.delete_lb_listenet_v7(ns_session=ns_conn, name=instance.name)
         except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {instance.id} : {exc}")
+            logger.error(f"try Delete LoadBalance Listener {instance.id} : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -339,7 +339,7 @@ class LoadBalanceHostViewSet(viewsets.ModelViewSet):
                                            listener=listener.name,
                                            protocol=listener.protocol)
         except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {data['host']} : {exc}")
+            logger.error(f"try Create LoadBalance Host {data['host']} : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -363,7 +363,7 @@ class LoadBalanceHostViewSet(viewsets.ModelViewSet):
             lb_name = listener.name
             instance.delete_lb_host(ns_conn, lb_name=lb_name)
         except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {instance.id} : {exc}")
+            logger.error(f"try Delete LoadBalance Host {instance.id} : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -427,7 +427,7 @@ class LoadBalancePathViewSet(viewsets.ModelViewSet):
                                            lb_host=host.host,
                                            path=data['path'])
         except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {data['path']} : {exc}")
+            logger.error(f"try Creat LoadBalance Path {data['path']} : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -451,7 +451,7 @@ class LoadBalancePathViewSet(viewsets.ModelViewSet):
             lb_name = listener.name
             instance.delete_lb_path(ns_conn, lb_name=lb_name)
         except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {instance.id} : {exc}")
+            logger.error(f"try Delete LoadBalance Path {instance.id} : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
