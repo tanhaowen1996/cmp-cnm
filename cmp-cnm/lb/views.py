@@ -54,6 +54,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     serializer_class = LoadBalanceSerializer
     queryset = LoadBalance.objects.all()
 
+
     def get_queryset(self):
         qs = super().get_queryset()
         if not self.request.user.is_staff:
