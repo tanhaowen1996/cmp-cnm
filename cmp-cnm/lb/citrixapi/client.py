@@ -182,6 +182,9 @@ def delete_lb_listener_v7(session, name):
         raise exc
 
 
+
+
+
 def create_lb_host(session, name, host, match_type, listener, protocol):
     """
     新建Content Switching policies ，作为域名策略
@@ -251,6 +254,7 @@ def create_lb_path(session, listener, name, match_type, host_match_type, protoco
                 break
         lb_path.policyname = name
         lb_path.action = path
+        lb_path.url = ""
         lb_path.rule = "HTTP.REQ.HOSTNAME.{0}(\"{1}\") && HTTP.REQ.URL.{2}(\"{3}\")".format(
             host_match_type, lb_host, match_type, path)
         create_lb_action(session, name, protocol, lbmethod)
