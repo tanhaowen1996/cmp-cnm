@@ -2,7 +2,7 @@ from django.db.models import Q
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from cmp_cnm.authentication import OSAuthentication
+from .authentication import OSAuthentication
 from nssrc.com.citrix.netscaler.nitro.exception.nitro_exception import nitro_exception
 from .serializers import LoadBalanceSerializer, LoadBalanceListenerSerializer, \
     LoadBalanceHostSerializer, LoadBalancePathSerializer, \
@@ -37,7 +37,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         需要传入参数如下：
         name lb名称
         net_type 网络类型
-        ip  负载均衡ip地址（非网段）
+        network_id  负载均衡网络id
         description  描述
 
         retrieve:
@@ -54,7 +54,6 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     serializer_class = LoadBalanceSerializer
     queryset = LoadBalance.objects.all()
 
-
     def get_queryset(self):
         qs = super().get_queryset()
         if not self.request.user.is_staff:
@@ -67,7 +66,8 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         try:
-            LoadBalance.create_cslb(ns_session=ns_conn, name=data['name'], address=data['ip'])
+            port = LoadBalance.get_ip(request.os_conn, data['network_id'])
+            LoadBalance.create_cslb(ns_session=ns_conn, name=data['name'], address=port.fixed_ips)
         except nitro_exception as exc:
             logger.error(f"try creating LoadBalance {data['name']} : {exc}")
             return Response({
@@ -87,6 +87,8 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 tenant_id=request.account_info.get('tenantId'),
                 tenant_name=request.account_info.get('tenantName'),
                 description=data['description'],
+                port_id=port.id,
+                network_id=data['network_id']
             )
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -147,7 +149,6 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             listener_list_v7:
             需要传入lb_id 参数
         """
-    authentication_classes = (OSAuthentication,)
     filterset_class = LoadBalanceListenerFilter
     serializer_class = LoadBalanceListenerSerializer
     queryset = LoadBalanceListener.objects.all()
