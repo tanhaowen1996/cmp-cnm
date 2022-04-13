@@ -67,7 +67,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         data = serializer.validated_data
         try:
             port = LoadBalance.get_ip(request.os_conn, data['network_id'])
-            LoadBalance.create_cslb(ns_session=ns_conn, name=data['name'], address=port.fixed_ips)
+            LoadBalance.create_cslb(ns_session=ns_conn, name=data['name'], address=port.fixed_ips[0].get('ip_address'))
         except nitro_exception as exc:
             logger.error(f"try creating LoadBalance {data['name']} : {exc}")
             return Response({
@@ -81,14 +81,15 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 lb_status = "down"
             serializer.save(
                 name=data['name'],
-                ip=data['ip'],
+                ip=port.fixed_ips[0].get('ip_address'),
                 net_type=data['net_type'],
                 status=lb_status,
                 tenant_id=request.account_info.get('tenantId'),
                 tenant_name=request.account_info.get('tenantName'),
                 description=data['description'],
                 port_id=port.id,
-                network_id=data['network_id']
+                network_id=data['network_id'],
+                subnet_id=port.fixed_ips[0].get('subnet_id')
             )
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
