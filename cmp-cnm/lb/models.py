@@ -2,10 +2,11 @@ from django.contrib.postgres.indexes import BrinIndex
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from .citrixapi import client as citrix_client
+from .utils import OpenstackMixin
 import uuid
 
 
-class LoadBalance(models.Model):
+class LoadBalance(models.Model, OpenstackMixin):
     id = models.UUIDField(
         primary_key=True,
         editable=False,
@@ -23,6 +24,9 @@ class LoadBalance(models.Model):
     ip = models.CharField(
         null=True,
         max_length=64
+    )
+    network_id = models.UUIDField(
+        null=True
     )
     subnet_id = models.CharField(
         null=True,
@@ -79,6 +83,14 @@ class LoadBalance(models.Model):
 
     def get_cslb(ns_session, name):
         return citrix_client.get_lb(ns_session, name)
+
+    def get_ip(os_conn, network_id):
+        network = os_conn.network.get_network(network_id)
+        os_port = network.create_port(
+            network_id=network.os_network_id,
+            description="Used by LodeBalance VIP"
+        )
+        return os_port
 
 
 class LoadBalanceListener(models.Model):

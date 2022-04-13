@@ -11,6 +11,7 @@ class LoadBalanceSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=False)
     ip = serializers.CharField(required=False)
     net_type = serializers.CharField(required=False)
+    network_id = serializers.UUIDField(required=False)
     subnet_id = serializers.UUIDField(required=False)
     port_id = serializers.UUIDField(required=False)
     provider = serializers.UUIDField(required=False)
@@ -25,6 +26,7 @@ class LoadBalanceSerializer(serializers.ModelSerializer):
             'name',
             'net_type',
             'ip',
+            'network_id',
             'subnet_id',
             'port_id',
             'provider',

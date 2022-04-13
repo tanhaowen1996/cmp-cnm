@@ -2,7 +2,7 @@ from django.db.models import Q
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from cmp_cnm.authentication import OSAuthentication
+from .authentication import OSAuthentication
 from nssrc.com.citrix.netscaler.nitro.exception.nitro_exception import nitro_exception
 from .serializers import LoadBalanceSerializer, LoadBalanceListenerSerializer, \
     LoadBalanceHostSerializer, LoadBalancePathSerializer, \
@@ -37,7 +37,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         需要传入参数如下：
         name lb名称
         net_type 网络类型
-        ip  负载均衡ip地址（非网段）
+        network_id  负载均衡网络id
         description  描述
 
         retrieve:
@@ -66,7 +66,8 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         try:
-            LoadBalance.create_cslb(ns_session=ns_conn, name=data['name'], address=data['ip'])
+            port = LoadBalance.get_ip(request.os_conn, data['network_id'])
+            LoadBalance.create_cslb(ns_session=ns_conn, name=data['name'], address=port.fixed_ips)
         except nitro_exception as exc:
             logger.error(f"try creating LoadBalance {data['name']} : {exc}")
             return Response({
@@ -86,6 +87,8 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 tenant_id=request.account_info.get('tenantId'),
                 tenant_name=request.account_info.get('tenantName'),
                 description=data['description'],
+                port_id=port.id,
+                network_id=data['network_id']
             )
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -146,7 +149,6 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             listener_list_v7:
             需要传入lb_id 参数
         """
-    authentication_classes = (OSAuthentication,)
     filterset_class = LoadBalanceListenerFilter
     serializer_class = LoadBalanceListenerSerializer
     queryset = LoadBalanceListener.objects.all()
@@ -167,7 +169,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                                                       protocol=data['protocol'],
                                                       lbmethod=data['algorithm'])
         except nitro_exception as exc:
-            logger.error(f"try creating LoadBalance Listeber {data['name']} : {exc}")
+            logger.error(f"try creating LoadBalance Listener {data['name']} : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -232,7 +234,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 return Response({"detail": f"ERROR: You must delete {instance.id}: Members"}, status=status.HTTP_400_BAD_REQUEST)
             instance.delete_lb_listenet_v4(ns_session=ns_conn, name=instance.name)
         except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {instance.id} : {exc}")
+            logger.error(f"try Delete LoadBalance Listener {instance.id} : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -249,7 +251,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 return Response({"detail": f"ERROR: You must delete {instance.id}: Hosts"}, status=status.HTTP_400_BAD_REQUEST)
             instance.delete_lb_listenet_v7(ns_session=ns_conn, name=instance.name)
         except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {instance.id} : {exc}")
+            logger.error(f"try Delete LoadBalance Listener {instance.id} : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -339,7 +341,7 @@ class LoadBalanceHostViewSet(viewsets.ModelViewSet):
                                            listener=listener.name,
                                            protocol=listener.protocol)
         except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {data['host']} : {exc}")
+            logger.error(f"try Create LoadBalance Host {data['host']} : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -363,7 +365,7 @@ class LoadBalanceHostViewSet(viewsets.ModelViewSet):
             lb_name = listener.name
             instance.delete_lb_host(ns_conn, lb_name=lb_name)
         except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {instance.id} : {exc}")
+            logger.error(f"try Delete LoadBalance Host {instance.id} : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -427,7 +429,7 @@ class LoadBalancePathViewSet(viewsets.ModelViewSet):
                                            lb_host=host.host,
                                            path=data['path'])
         except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {data['path']} : {exc}")
+            logger.error(f"try Creat LoadBalance Path {data['path']} : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -451,7 +453,7 @@ class LoadBalancePathViewSet(viewsets.ModelViewSet):
             lb_name = listener.name
             instance.delete_lb_path(ns_conn, lb_name=lb_name)
         except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {instance.id} : {exc}")
+            logger.error(f"try Delete LoadBalance Path {instance.id} : {exc}")
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
