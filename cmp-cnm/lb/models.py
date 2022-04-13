@@ -85,9 +85,10 @@ class LoadBalance(models.Model, OpenstackMixin):
         return citrix_client.get_lb(ns_session, name)
 
     def get_ip(os_conn, network_id):
+
         network = os_conn.network.get_network(network_id)
-        os_port = network.create_port(
-            network_id=network.os_network_id,
+        os_port = os_conn.network.create_port(
+            network_id=network.id,
             description="Used by LodeBalance VIP"
         )
         return os_port
