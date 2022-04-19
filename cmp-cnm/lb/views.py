@@ -2,7 +2,7 @@ from django.db.models import Q
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .authentication import OSAuthentication
+from .authentication import AccountInfoAuthentication, OSAuthentication
 from nssrc.com.citrix.netscaler.nitro.exception.nitro_exception import nitro_exception
 from .serializers import LoadBalanceSerializer, LoadBalanceListenerSerializer, \
     LoadBalanceHostSerializer, LoadBalancePathSerializer, \
@@ -150,6 +150,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             listener_list_v7:
             需要传入lb_id 参数
         """
+    authentication_classes = (OSAuthentication,)
     filterset_class = LoadBalanceListenerFilter
     serializer_class = LoadBalanceListenerSerializer
     queryset = LoadBalanceListener.objects.all()
@@ -314,7 +315,7 @@ class LoadBalanceHostViewSet(viewsets.ModelViewSet):
         destroy:
         drop 负载均衡域名
     """
-    authentication_classes = (OSAuthentication,)
+    authentication_classes = (AccountInfoAuthentication,)
     filterset_class = LoadBalanceHostFilter
     serializer_class = LoadBalanceHostSerializer
     queryset = LoadBalanceHost.objects.all()
@@ -398,7 +399,7 @@ class LoadBalancePathViewSet(viewsets.ModelViewSet):
         destroy:
         drop 负载均衡路径
     """
-    authentication_classes = (OSAuthentication,)
+    authentication_classes = (AccountInfoAuthentication,)
     filterset_class = LoadBalancePathFilter
     serializer_class = LoadBalancePathSerializer
     queryset = LoadBalancePath.objects.all()
