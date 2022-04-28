@@ -86,7 +86,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 status=lb_status,
                 tenant_id=request.account_info.get('tenantId'),
                 tenant_name=request.account_info.get('tenantName'),
-                description=data['description'],
+                description=data.get('description', None),
                 port_id=port.id,
                 network_id=data['network_id'],
                 subnet_id=port.fixed_ips[0].get('subnet_id')
@@ -735,4 +735,5 @@ class SSLViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         else:
             self.perform_destroy(instance)
             return Response("删除成功", status=status.HTTP_201_CREATED)
+
 
