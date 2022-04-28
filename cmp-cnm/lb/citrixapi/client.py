@@ -244,6 +244,8 @@ def create_lb_path(session, listener, name, match_type, host_match_type, protoco
     HTTP.REQ.URL.
     """
     try:
+        import pdb
+        pdb.set_trace()
         lb_path = cspolicy()
         for i in range(1, 1000):
             policy_name = name + "-" + str(i)
@@ -254,7 +256,7 @@ def create_lb_path(session, listener, name, match_type, host_match_type, protoco
                 break
         lb_path.policyname = name
         lb_path.action = path
-        lb_path.url = ""
+        #lb_path.url = ""
         lb_path.rule = "HTTP.REQ.HOSTNAME.{0}(\"{1}\") && HTTP.REQ.URL.{2}(\"{3}\")".format(
             host_match_type, lb_host, match_type, path)
         create_lb_action(session, name, protocol, lbmethod)
