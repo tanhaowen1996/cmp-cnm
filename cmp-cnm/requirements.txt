@@ -1,0 +1,16 @@
+django<3.3
+django-filter
+django-netfields
+djangorestframework
+drf_yasg
+gunicorn
+httptools
+psycopg2-binary
+python-dotenv
+requests
+uvicorn
+uvloop
+openstacksdk
+
+oslo.config>=6.0.0 # Apache-2.0
+oslo.messaging>=8.0.0 # Apache-2.0
