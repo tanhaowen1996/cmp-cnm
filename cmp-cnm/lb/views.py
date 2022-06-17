@@ -67,6 +67,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         data = serializer.validated_data
         try:
             port = LoadBalance.get_ip(request.os_conn, data['network_id'])
+            request.os_conn.network.update_port(port.id, tags=["vip"])
             LoadBalance.create_cslb(ns_session=ns_conn, name=data['name'], address=port.fixed_ips[0].get('ip_address'))
         except nitro_exception as exc:
             logger.error(f"try creating LoadBalance {data['name']} : {exc}")
