@@ -108,7 +108,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
         else:
             self.perform_destroy(instance)
-            request.os_conn.port.delete_port(instance.port_id)
+            request.os_conn.network.delete_port(instance.port_id)
             return Response("删除成功", status=status.HTTP_201_CREATED)
 
 
