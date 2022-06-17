@@ -70,6 +70,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             LoadBalance.create_cslb(ns_session=ns_conn, name=data['name'], address=port.fixed_ips[0].get('ip_address'))
         except nitro_exception as exc:
             logger.error(f"try creating LoadBalance {data['name']} : {exc}")
+            request.os_conn.network.delete_port(port.id)
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -108,6 +109,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
         else:
             self.perform_destroy(instance)
+            request.os_conn.network.delete_port(instance.port_id)
             return Response("删除成功", status=status.HTTP_201_CREATED)
 
 
