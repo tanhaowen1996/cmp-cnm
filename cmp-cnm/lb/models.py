@@ -89,7 +89,12 @@ class LoadBalance(models.Model, OpenstackMixin):
         network = os_conn.network.get_network(network_id)
         os_port = os_conn.network.create_port(
             network_id=network.id,
-            description="Used by LodeBalance VIP"
+            description="Used by LodeBalance VIP",
+            name="LoadBalance_VIP"
+        )
+        os_conn.network.set_tags(
+            os_port,
+            tags=["vip"]
         )
         return os_port
 
