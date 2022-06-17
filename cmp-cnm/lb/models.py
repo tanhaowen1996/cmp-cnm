@@ -93,10 +93,10 @@ class LoadBalance(models.Model, OpenstackMixin):
             tags=["vip"],
             name="LoadBalance_VIP"
         )
-        os_conn.network.update_port(
-            port=os_port.id,
-            tags=["vip"]
-        )
+        # os_conn.network.update_port(
+        #     port=os_port.id,
+        #     tags=["vip"]
+        # )
         return os_port
 
 
