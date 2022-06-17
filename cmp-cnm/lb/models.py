@@ -93,8 +93,6 @@ class LoadBalance(models.Model, OpenstackMixin):
             tags=["vip"],
             name="LoadBalance_VIP"
         )
-        import pdb
-        pdb.set_trace()
         os_conn.network.set_tags(
             os_port,
             tags=["vip"]
