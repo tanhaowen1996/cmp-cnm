@@ -18,9 +18,9 @@ from django.conf.urls import re_path
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework.routers import SimpleRouter
-from lb.views import LoadBalanceViewSet, LoadBalanceListenerViewSet, \
-                     LoadBalanceHostViewSet, LoadBalancePathViewSet, \
-                     LoadBalanceMemberViewSet, SSLViewSet
+from lb.views import LoadBalanceViewSet, \
+                     LoadBalanceListenerViewSet, \
+                     LoadBalanceMemberViewSet
 from cmp_cnm.settings import MEDIA_ROOT
 from django.views.static import serve
 
@@ -28,10 +28,7 @@ from django.views.static import serve
 router = SimpleRouter(trailing_slash=False)
 router.register(r'lb', LoadBalanceViewSet, basename='load_balance')
 router.register(r'lb_listener', LoadBalanceListenerViewSet, basename='load_balance_listener')
-router.register(r'lb_host', LoadBalanceHostViewSet, basename='load_balance_host')
-router.register(r'lb_path', LoadBalancePathViewSet, basename='load_balance_path')
 router.register(r'lb_member', LoadBalanceMemberViewSet, basename='load_balance_member')
-router.register(r'ssl', SSLViewSet, basename='SSL')
 
 urlpatterns = [
     path('v2/', include(router.urls)),
