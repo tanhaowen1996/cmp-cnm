@@ -45,10 +45,6 @@ class LoadBalance(models.Model, OpenstackMixin):
         null=True,
         max_length=32
     )
-    status_desc = models.CharField(
-        null=True,
-        max_length=255
-    )
     description = models.CharField(
         null=True,
         max_length=255
@@ -71,18 +67,14 @@ class LoadBalance(models.Model, OpenstackMixin):
     class Meta:
         indexes = (BrinIndex(fields=['updated_at', 'created_at']),)
 
-    # def get_network(self, os_conn, ):
-    #     pass
-
     @classmethod
     def create_cslb(cls, ns_session, name, address):
-        citrix_client.create_lb(ns_session, name, address)
+        pass
+        # citrix_client.create_lb(ns_session, name, address)
 
     def delete_cslb(self, ns_session, name):
-        citrix_client.delete_lb(ns_session, name)
-
-    def get_cslb(ns_session, name):
-        return citrix_client.get_lb(ns_session, name)
+        pass
+        # citrix_client.delete_lb(ns_session, name)
 
     def get_ip(os_conn, network_id):
 
@@ -98,6 +90,11 @@ class LoadBalance(models.Model, OpenstackMixin):
             tags=["vip"]
         )
         return os_port
+
+
+
+    # def get_cslb(ns_session, name):
+    #     return citrix_client.get_lb(ns_session, name)
 
 
 class LoadBalanceListener(models.Model):
@@ -125,14 +122,6 @@ class LoadBalanceListener(models.Model):
         null=True,
         max_length=64
     )
-    pip = models.CharField(
-        null=True,
-        max_length=64
-    )
-    # pip 取值：0：ingress, 1: egress, 2: address, 3: nwclss, 4: disable
-    ssl_id = models.UUIDField(
-        null=True,
-    )
     algorithm = models.CharField(
         null=True,
         max_length=64
@@ -141,10 +130,6 @@ class LoadBalanceListener(models.Model):
         null=True,
         max_length=32
     )
-    status_desc = models.CharField(
-        null=True,
-        max_length=255
-    )
     updated_at = models.DateTimeField(
         auto_now=True,
         verbose_name=_('updated time'))
@@ -156,145 +141,21 @@ class LoadBalanceListener(models.Model):
         indexes = (BrinIndex(fields=['updated_at', 'created_at']),)
 
     @classmethod
-    def create_lb_listener_v4(cls, ns_session,
+    def create_lb_listener(cls, ns_session,
                               name,
                               address,
                               port,
                               protocol,
                               lbmethod):
-        citrix_client.create_lb_listener_v4(ns_session,
+        citrix_client.create_lb_listener(ns_session,
                                             name,
                                             address,
                                             port,
                                             protocol,
                                             lbmethod)
 
-    @classmethod
-    def create_lb_listener_v7(cls, ns_session, name, address, port, protocol):
-        citrix_client.create_lb_listener_v7(ns_session, name, address, port, protocol)
-
-    def delete_lb_listenet_v4(self, ns_session, name):
-        citrix_client.delete_lb_listener_v4(ns_session, name)
-
-    def delete_lb_listenet_v7_check(self, ns_session, name):
-        return  citrix_client.delete_lb_listener_v7_check(ns_session, name)
-
-    def delete_lb_listenet_v7(self, ns_session, name):
-        citrix_client.delete_lb_listener_v7(ns_session, name)
-
-    @classmethod
-    def add_ssl(cls, ns_session, ssl_name, listener_name):
-        citrix_client.add_ssl(session=ns_session, ssl_name=ssl_name, listener_name=listener_name)
-
-
-class LoadBalanceHost(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        editable=False,
-        default=uuid.uuid1,
-        verbose_name=_('LBHost_id')
-    )
-    name = models.CharField(
-        null=True,
-        max_length=255
-    )
-    listener_id = models.UUIDField(
-        null=True
-    )
-    host = models.CharField(
-        null=True,
-        max_length=255
-    )
-    match_type = models.CharField(
-        null=True,
-        max_length=64
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        verbose_name=_('updated time'))
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name=_('created time'))
-
-    class Meta:
-        indexes = (BrinIndex(fields=['updated_at', 'created_at']),)
-
-    @classmethod
-    def create_lb_host(cls, ns_session, name, host, match_type, listener, protocol):
-        citrix_client.create_lb_host(session=ns_session,
-                                     name=name,
-                                     host=host,
-                                     match_type=match_type,
-                                     listener=listener,
-                                     protocol=protocol)
-
-    def delete_lb_host(self, ns_session, lb_name):
-        citrix_client.delete_lb_host(session=ns_session,
-                                     lb_name=lb_name,
-                                     host_name=self.name)
-
-
-class LoadBalancePath(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        editable=False,
-        default=uuid.uuid1,
-        verbose_name=_('LBPath id')
-    )
-    name = models.CharField(
-        null=True,
-        max_length=255
-    )
-    host_id = models.UUIDField(
-        null=True
-    )
-    path = models.CharField(
-        null=True,
-        max_length=255
-    )
-    algorithm = models.CharField(
-        null=True,
-        max_length=64
-    )
-    match_type = models.CharField(
-        null=True,
-        max_length=64
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        verbose_name=_('updated time'))
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name=_('created time'))
-
-    class Meta:
-        indexes = (BrinIndex(fields=['updated_at', 'created_at']),)
-
-    @classmethod
-    def create_lb_path(cls,
-                       ns_session,
-                       listener,
-                       name,
-                       match_type,
-                       host_match_type,
-                       protocol,
-                       lbmethod,
-                       lb_host,
-                       path):
-        return citrix_client.create_lb_path(ns_session,
-                                            listener,
-                                            name,
-                                            match_type,
-                                            host_match_type,
-                                            protocol,
-                                            lbmethod,
-                                            lb_host,
-                                            path)
-
-    def delete_lb_path(self, ns_session, lb_name):
-        citrix_client.delete_lb_path(session=ns_session,
-                                     csvs_name=lb_name,
-                                     path_name=self.name)
+    def delete_lb_listenet(self, ns_session, name):
+        citrix_client.delete_lb_listener(ns_session, name)
 
 
 class LoadBalanceMember(models.Model):
@@ -304,7 +165,7 @@ class LoadBalanceMember(models.Model):
         default=uuid.uuid1,
         verbose_name=_('LBMember id')
     )
-    p_id = models.UUIDField(
+    listener_id = models.UUIDField(
         null=True
     )
     ip = models.CharField(
@@ -342,84 +203,3 @@ class LoadBalanceMember(models.Model):
 
     def update_lb_member(self, ns_session, lbvs_name, member_name, ip, port, weight, protocol):
         citrix_client.update_lb_member(ns_session, lbvs_name, member_name, ip, port, weight, protocol)
-
-
-class SSL(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        editable=False,
-        default=uuid.uuid1,
-        verbose_name=_('SSL id')
-    )
-    name = models.CharField(
-        null=True,
-        max_length=128
-    )
-    scope = models.CharField(
-        null=True,
-        max_length=32
-    )
-    cert_type = models.CharField(
-        null=True,
-        max_length=16
-    )
-    domain = models.CharField(
-        null=True,
-        max_length=128
-    )
-    cert = models.TextField(
-        null=True
-    )
-    pkey = models.TextField(
-        null=True
-    )
-    status = models.CharField(
-        null=True,
-        max_length=64
-    )
-    cert_begin_time = models.CharField(
-        null=True,
-        max_length=255
-    )
-    cert_end_time = models.CharField(
-        null=True,
-        max_length=255
-    )
-    tenant_id = models.CharField(
-        null=True,
-        max_length=64
-    )
-    tenant_name = models.CharField(
-        null=True,
-        max_length=255
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        verbose_name=_('updated time'))
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name=_('created time'))
-
-    class Meta:
-        indexes = (BrinIndex(fields=['updated_at', 'created_at']),)
-
-    @classmethod
-    def get_ssl(cls, ns_session, name):
-        return citrix_client.get_ssl(ns_session, name)
-
-    @classmethod
-    def create_ssl(cls, ns_session, name, cert, pkey):
-        list_cert = cert.split("-----END CERTIFICATE-----")
-        if "" in list_cert:
-            list_cert.remove("")
-        cert_sc = list_cert[0] + "-----END CERTIFICATE-----"
-        citrix_client.import_ssl(session=ns_session, name=name, cert=cert_sc, pkey=pkey)
-        if len(list_cert) == 2:
-            cert_root = list_cert[1] + "-----END CERTIFICATE-----"
-            r_name = name + "-root"
-            citrix_client.import_root_ssl(ns_session, name=r_name, cert=cert_root)
-            citrix_client.ssl_link_root(ns_session, sc_name=name, rsc_name=r_name)
-
-    def delete_ssl(self, ns_session, name):
-        citrix_client.delete_ssl(ns_session, name)
-
