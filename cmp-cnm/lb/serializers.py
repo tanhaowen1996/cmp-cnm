@@ -45,6 +45,8 @@ class LoadBalanceListenerSerializer(serializers.ModelSerializer):
     type = serializers.CharField(required=False)
     algorithm = serializers.CharField(required=False)
     status = serializers.CharField(required=False)
+    member_num = serializers.IntegerField(required=False)
+    all_member = serializers.JSONField(required=False)
 
     class Meta:
         model = LoadBalanceListener
@@ -57,6 +59,8 @@ class LoadBalanceListenerSerializer(serializers.ModelSerializer):
             'type',
             'algorithm',
             'status',
+            'member_num',
+            'all_member',
         )
 
 

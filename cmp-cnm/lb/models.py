@@ -82,7 +82,6 @@ class LoadBalance(models.Model, OpenstackMixin):
         os_port = os_conn.network.create_port(
             network_id=network.id,
             description="Used by LodeBalance VIP",
-            tags=["vip"],
             name="LoadBalance_VIP"
         )
         os_conn.network.set_tags(
@@ -129,6 +128,12 @@ class LoadBalanceListener(models.Model):
     status = models.CharField(
         null=True,
         max_length=32
+    )
+    member_num = models.IntegerField(
+        null=True
+    )
+    all_member = models.TextField(
+        null=True
     )
     updated_at = models.DateTimeField(
         auto_now=True,
