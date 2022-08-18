@@ -68,6 +68,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             print(request.os_conn)
         except nitro_exception as exc:
             logger.error(f"try creating LoadBalance {data['name']} : {exc}")
+            request.os_conn.network.delete_port(port.id)
             return Response({
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
