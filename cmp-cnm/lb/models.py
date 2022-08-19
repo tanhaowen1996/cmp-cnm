@@ -25,8 +25,9 @@ class LoadBalance(models.Model, OpenstackMixin):
         null=True,
         max_length=64
     )
-    network_id = models.UUIDField(
-        null=True
+    network_id = models.CharField(
+        null=True,
+        max_length=128
     )
     subnet_id = models.CharField(
         null=True,
@@ -159,7 +160,7 @@ class LoadBalanceListener(models.Model):
                                             protocol,
                                             lbmethod)
 
-    def delete_lb_listenet(self, ns_session, name):
+    def delete_lb_listener(self, ns_session, name):
         citrix_client.delete_lb_listener(ns_session, name)
 
 
