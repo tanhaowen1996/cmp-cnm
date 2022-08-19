@@ -62,8 +62,20 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         try:
-            port = LoadBalance.get_ip(request.os_conn, data['network_id'])
-            LoadBalance.create_cslb(ns_session=ns_conn, name=data['name'], address=port.fixed_ips[0].get('ip_address'))
+            if request.tenant.get("region_name") == 'cangke':
+                provider = "radware"
+            else:
+                provider = "citrix"
+            if data.get('ip'):
+                ipaddress = data['ip']
+                port_id = None
+                subnet_id = None
+            else:
+                port = LoadBalance.get_ip(request.os_conn, data.get('network_id'))
+                ipaddress = port.fixed_ips[0].get('ip_address')
+                port_id = port.get('id')
+                subnet_id = port.fixed_ips[0].get('subnet_id')
+            LoadBalance.create_cslb(ns_session=ns_conn, name=data['name'], address=ipaddress)
 
             print(request.os_conn)
         except nitro_exception as exc:
@@ -73,22 +85,18 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 "detail": f"{exc}"
             }, status=status.HTTP_400_BAD_REQUEST)
         else:
-            # lb = LoadBalance.get_cslb(ns_session=ns_conn, name=data['name'])
-            # if lb.status:
-            #     lb_status = "up"
-            # else:
-            #     lb_status = "down"
             serializer.save(
                 name=data['name'],
-                ip=port.fixed_ips[0].get('ip_address'),
+                ip=ipaddress,
                 net_type=data['net_type'],
                 status="up",
                 tenant_id=request.tenant.get("id"),
                 tenant_name=request.tenant.get('name'),
                 description=data.get('description', None),
-                port_id=port.id,
-                network_id=data['network_id'],
-                subnet_id=port.fixed_ips[0].get('subnet_id')
+                port_id=port_id,
+                network_id=data.get('network_id', None),
+                subnet_id=subnet_id,
+                provider=provider
             )
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -98,7 +106,12 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         instance = self.get_object()
         try:
             if LoadBalanceListener.objects.filter(lb_id=instance.id):
-                return Response({"detail": f"ERROR: You must delete {instance.id}: Listener"}, status=status.HTTP_400_BAD_REQUEST)
+                for listener in LoadBalanceListener.objects.filter(lb_id=instance.id):
+                    if LoadBalanceMember.objects.filter(listener_id=listener.id):
+                        for member in LoadBalanceMember.objects.filter(listener_id=listener.id):
+                            member.delete()
+                    listener.delete_lb_listener(ns_session=ns_conn, name=listener.name)
+                    listener.delete()
             instance.delete_cslb(ns_conn, instance.name)
         except nitro_exception as exc:
             logger.error(f"try Delete LoadBalance {instance.name} : {exc}")
@@ -145,13 +158,13 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         data = serializer.validated_data
         try:
             lb = LoadBalance.objects.get(id=data['lb_id'])
-            lb_listener_name = lb.ip + ":" + str(data['port']) + "-" + data['protocol'] + "lbvs"
+            lb_listener_name = lb.ip + ":" + str(data['port']) + "-" + data['protocol'] + "-lbvs"
             LoadBalanceListener.create_lb_listener(ns_session=ns_conn,
                                                       name=lb_listener_name,
                                                       address=lb.ip,
                                                       port=data['port'],
                                                       protocol=data['protocol'],
-                                                      lbmethod=data['algorithm'])
+                                                      lbmethod=data.get('algorithm', 'ROUNDROBIN'))
         except nitro_exception as exc:
             logger.error(f"try creating LoadBalance Listener {data['name']} : {exc}")
             return Response({
@@ -164,8 +177,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 protocol=data['protocol'],
                 port=data['port'],
                 type="4层",
-                pip=lb.net_type,
-                algorithm=data['algorithm'],
+                algorithm=data.get('algorithm', 'ROUNDROBIN'),
             )
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -174,9 +186,10 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         ns_conn = NSMixin.get_session()
         instance = self.get_object()
         try:
-            if LoadBalanceMember.objects.filter(p_id=instance.id):
-                return Response({"detail": f"ERROR: You must delete {instance.id}: Members"}, status=status.HTTP_400_BAD_REQUEST)
-            instance.delete_lb_listenet_v4(ns_session=ns_conn, name=instance.name)
+            if LoadBalanceMember.objects.filter(listener_id=instance.id):
+                for member in LoadBalanceMember.objects.filter(listener_id=instance.id):
+                    member.delete()
+            instance.delete_lb_listener(ns_session=ns_conn, name=instance.name)
         except nitro_exception as exc:
             logger.error(f"try Delete LoadBalance Listener {instance.id} : {exc}")
             return Response({
@@ -239,7 +252,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         qs = super().get_queryset()
         if not self.request.GET.get('listener_id'):
             return qs
-        qs = qs.filter(p_id=self.request.GET.get('listener_id'))
+        qs = qs.filter(listener_id=self.request.GET.get('listener_id'))
 
         return qs
 
@@ -250,13 +263,13 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         try:
-            listener = LoadBalanceListener.objects.get(id=data['p_id'])
+            listener = LoadBalanceListener.objects.get(id=data['listener_id'])
             protocol = listener.protocol
-            lbvs_name = listener.name + "-lbvs"
+            lbvs_name = listener.name
             LoadBalanceMember.add_member(ns_session=ns_conn,
                                          address=data['ip'],
                                          port=data['port'],
-                                         weight=data['weight'],
+                                         weight=data.get('weight', 1),
                                          protocol=protocol,
                                          vs_name=lbvs_name)
         except nitro_exception as exc:
@@ -266,10 +279,10 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
         else:
             serializer.save(
-                p_id=data['p_id'],
+                listener_id=data['listener_id'],
                 ip=data['ip'],
                 port=data['port'],
-                weight=data['weight']
+                weight=data.get('weight', 1)
             )
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -278,8 +291,8 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         ns_conn = NSMixin.get_session()
         instance = self.get_object()
         try:
-            listener = LoadBalanceListener.objects.get(id=instance.p_id)
-            lbvs_name = listener.name + "-lbvs"
+            listener = LoadBalanceListener.objects.get(id=instance.listener_id)
+            lbvs_name = listener.name
             member_name = instance.ip + ":" + str(instance.port) + "-" + listener.protocol
             instance.delete_lb_member(ns_conn, lbvs_name=lbvs_name, member_name=member_name)
         except nitro_exception as exc:
@@ -295,8 +308,8 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         ns_conn = NSMixin.get_session()
         instance = self.get_object()
         try:
-            listener = LoadBalanceListener.objects.get(id=instance.p_id)
-            lbvs_name = listener.name + "-lbvs"
+            listener = LoadBalanceListener.objects.get(id=instance.listener_id)
+            lbvs_name = listener.name
             member_name = instance.ip + ":" + str(instance.port) + "-" + listener.protocol
             instance.update_lb_member(ns_conn, lbvs_name, member_name, request.data['ip'], request.data['port'], request.data['weight'], listener.protocol)
             serializer = self.get_serializer(instance, data=request.data)
