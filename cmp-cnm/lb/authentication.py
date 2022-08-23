@@ -46,10 +46,11 @@ class OSAuthentication(authentication.BaseAuthentication):
             user, created = User.objects.update_or_create(
                 defaults={
                     'username': users.get("name"),
-                    'is_staff': bool(int(request.headers.get("isPlatform")))
+                    'is_staff': bool(int(request.headers.get("IsPlatform")))
                 })
             request.tenant = {
                 'id': projects.get('id'),
-                'name': projects.get('name')
+                'name': projects.get('name'),
+                'region_name': request.headers.get("Region")
             }
             return (user, None)

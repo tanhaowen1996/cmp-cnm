@@ -25,8 +25,9 @@ class LoadBalance(models.Model, OpenstackMixin):
         null=True,
         max_length=64
     )
-    network_id = models.UUIDField(
-        null=True
+    network_id = models.CharField(
+        null=True,
+        max_length=128
     )
     subnet_id = models.CharField(
         null=True,
@@ -68,16 +69,17 @@ class LoadBalance(models.Model, OpenstackMixin):
         indexes = (BrinIndex(fields=['updated_at', 'created_at']),)
 
     @classmethod
-    def create_cslb(cls, ns_session, name, address):
+    def create_lb(cls, ns_session, name, address):
         pass
         # citrix_client.create_lb(ns_session, name, address)
 
-    def delete_cslb(self, ns_session, name):
+    def delete_lb(self, ns_session, name):
+        if citrix_client.get_lb(session=ns_session, name=name):
+            citrix_client.delete_lb(ns_session, name)
         pass
         # citrix_client.delete_lb(ns_session, name)
 
     def get_ip(os_conn, network_id):
-
         network = os_conn.network.get_network(network_id)
         os_port = os_conn.network.create_port(
             network_id=network.id,
@@ -89,8 +91,6 @@ class LoadBalance(models.Model, OpenstackMixin):
             tags=["vip"]
         )
         return os_port
-
-
 
     # def get_cslb(ns_session, name):
     #     return citrix_client.get_lb(ns_session, name)
@@ -159,8 +159,11 @@ class LoadBalanceListener(models.Model):
                                             protocol,
                                             lbmethod)
 
-    def delete_lb_listenet(self, ns_session, name):
-        citrix_client.delete_lb_listener(ns_session, name)
+    def delete_lb_listener(self, ns_session, name):
+        if "lbvs" in name or "_" in name:
+            citrix_client.delete_lb_listener(ns_session, name)
+        else:
+            citrix_client.delete_lb_listener_csvs(ns_session, name)
 
 
 class LoadBalanceMember(models.Model):

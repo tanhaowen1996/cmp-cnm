@@ -7,10 +7,6 @@ from nssrc.com.citrix.netscaler.nitro.resource.config.lb.lbvserver import lbvser
 from nssrc.com.citrix.netscaler.nitro.resource.config.lb.lbvserver_service_binding import lbvserver_service_binding
 from nssrc.com.citrix.netscaler.nitro.resource.config.basic.service import service
 from nssrc.com.citrix.netscaler.nitro.resource.config.basic.server import server
-from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslcertkey import sslcertkey
-from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslvserver_sslcertkey_binding import sslvserver_sslcertkey_binding
-from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslkeyfile import sslkeyfile
-from nssrc.com.citrix.netscaler.nitro.resource.config.ssl.sslcertfile import sslcertfile
 from nssrc.com.citrix.netscaler.nitro.resource.config.network.vlan import vlan
 from nssrc.com.citrix.netscaler.nitro.resource.config.network.vlan_interface_binding import vlan_interface_binding
 from nssrc.com.citrix.netscaler.nitro.resource.config.ns.nsip import nsip
@@ -107,6 +103,57 @@ def delete_lb_listener(session, name):
     try:
         lb_listener = lbvserver()
         lb_listener.delete(session, name)
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+        raise exc
+
+
+def delete_lb_listener_csvs(session, name):
+    try:
+        lb_listener = csvserver()
+        lb_listener.delete(session, name)
+        delete_lb_ture_policy(session, name)
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+        raise exc
+
+
+def delete_lb_ture_policy(session, name):
+    try:
+        cspolicy.delete(session, name)
+        delete_lb_action(session, name)
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+        raise exc
+
+
+def delete_lb_action(session, name):
+    try:
+        lb_action = csaction()
+        lb_action.delete(session, name)
+        delete_lb_vs(session, name)
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+        raise exc
+
+
+def delete_lb_vs(session, name):
+    try:
+        lb_vserver = lbvserver()
+        lb_name = name + "-lbvs"
+        lb_vserver.delete(session, lb_name)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
