@@ -5,11 +5,12 @@ from rest_framework.response import Response
 from .authentication import OSAuthentication
 from nssrc.com.citrix.netscaler.nitro.exception.nitro_exception import nitro_exception
 from .serializers import LoadBalanceSerializer, LoadBalanceListenerSerializer, \
-    LoadBalanceMemberSerializer
+    LoadBalanceMemberSerializer, UpdateLoadBalanceSerializer
 from .models import LoadBalance, LoadBalanceListener, LoadBalanceMember
 from .filters import LoadBalanceFilter, LoadBalanceListenerFilter, LoadBalanceMemberFilter
 from .citrixapi.session import NSMixin
 import logging
+import openstack
 from datetime import datetime
 
 logger = logging.getLogger(__package__)
@@ -41,7 +42,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         Get LB
 
         update:
-        无
+        修改name和描述
 
         destroy:
         drop 负载均衡（需要保证负载均衡下无监听）
@@ -49,6 +50,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     authentication_classes = (OSAuthentication,)
     filterset_class = LoadBalanceFilter
     serializer_class = LoadBalanceSerializer
+    update_serializer_class = UpdateLoadBalanceSerializer
     queryset = LoadBalance.objects.all()
     def get_queryset(self):
         qs = super().get_queryset()
@@ -57,71 +59,97 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         return qs
 
     def create(self, request, *args, **kwargs):
-        ns_conn = NSMixin.get_session()
+        # ns_conn = NSMixin.get_session()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        try:
-            if request.tenant.get("region_name") == 'cangke':
-                provider = "radware"
-            else:
-                provider = "citrix"
-            if data.get('ip'):
-                ipaddress = data['ip']
-                port_id = None
-                subnet_id = None
-            else:
-                port = LoadBalance.get_ip(request.os_conn, data.get('network_id'))
-                ipaddress = port.fixed_ips[0].get('ip_address')
-                port_id = port.get('id')
-                subnet_id = port.fixed_ips[0].get('subnet_id')
-            LoadBalance.create_cslb(ns_session=ns_conn, name=data['name'], address=ipaddress)
-
-            print(request.os_conn)
-        except nitro_exception as exc:
-            logger.error(f"try creating LoadBalance {data['name']} : {exc}")
-            request.os_conn.network.delete_port(port.id)
-            return Response({
-                "detail": f"{exc}"
-            }, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save(
+            name=data['name'],
+            net_type=data.get('net_type', 'pubic'),
+            status="create",
+            tenant_id=request.tenant.get("id"),
+            tenant_name=request.tenant.get('name'),
+            description=data.get('description', None),
+            network_id=data.get('network_id', None)
+        )
+        if request.tenant.get("region_name") == 'fuzhou2':
+            provider = "citrix"
         else:
-            serializer.save(
-                name=data['name'],
-                ip=ipaddress,
-                net_type=data['net_type'],
-                status="up",
-                tenant_id=request.tenant.get("id"),
-                tenant_name=request.tenant.get('name'),
-                description=data.get('description', None),
-                port_id=port_id,
-                network_id=data.get('network_id', None),
-                subnet_id=subnet_id,
-                provider=provider
-            )
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            provider = "radware"
+        if data.get('ip'):
+            ipaddress = data['ip']
+            port_id = None
+            subnet_id = None
+        else:
+            try:
+                port = LoadBalance.get_ip(request.os_conn, data.get('network_id'))
+            except openstack.exceptions.HttpException as exc:
+                logger.error(f"try creating openstack port {serializer.validated_data}: {exc}")
+                serializer.save(
+                    status="filed"
+                )
+                return Response({
+                    "detail": f"{exc}"
+
+                }, status=status.HTTP_400_BAD_REQUEST)
+            ipaddress = port.fixed_ips[0].get('ip_address')
+            port_id = port.get('id')
+            subnet_id = port.fixed_ips[0].get('subnet_id')
+        if request.tenant.get("region_name") == 'fuzhou2':
+            pass
+            # LoadBalance.create_lb(ns_session=ns_conn, name=data['name'], address=ipaddress)
+        else:
+            pass
+        serializer.save(
+            name=data['name'],
+            ip=ipaddress,
+            net_type=data.get('net_type', 'pubic'),
+            status="up",
+            tenant_id=request.tenant.get("id"),
+            tenant_name=request.tenant.get('name'),
+            description=data.get('description', None),
+            port_id=port_id,
+            network_id=data.get('network_id', None),
+            subnet_id=subnet_id,
+            provider=provider
+        )
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
         instance = self.get_object()
-        try:
-            if LoadBalanceListener.objects.filter(lb_id=instance.id):
-                for listener in LoadBalanceListener.objects.filter(lb_id=instance.id):
-                    if LoadBalanceMember.objects.filter(listener_id=listener.id):
-                        for member in LoadBalanceMember.objects.filter(listener_id=listener.id):
-                            member.delete()
-                    listener.delete_lb_listener(ns_session=ns_conn, name=listener.name)
-                    listener.delete()
-            instance.delete_cslb(ns_conn, instance.name)
-        except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {instance.name} : {exc}")
-            return Response({
-                "detail": f"{exc}"
-            }, status=status.HTTP_400_BAD_REQUEST)
+        if instance.provider == "citrix":
+            try:
+                if LoadBalanceListener.objects.filter(lb_id=instance.id):
+                    for listener in LoadBalanceListener.objects.filter(lb_id=instance.id):
+                        if LoadBalanceMember.objects.filter(listener_id=listener.id):
+                            for member in LoadBalanceMember.objects.filter(listener_id=listener.id):
+                                member.delete()
+                        listener.delete_lb_listener(ns_session=ns_conn, name=listener.name)
+                        listener.delete()
+                instance.delete_lb(ns_conn, instance.name)
+            except nitro_exception as exc:
+                logger.error(f"try Delete LoadBalance {instance.name} : {exc}")
+                return Response({
+                    "detail": f"{exc}"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                try:
+                    request.os_conn.network.delete_port(instance.port_id)
+                except openstack.exceptions.InvalidRequest as exc:
+                    logger.error(f"try delete openstack port {instance.port_id}: {exc}")
+                self.perform_destroy(instance)
+                return Response("删除成功", status=status.HTTP_201_CREATED)
         else:
-            self.perform_destroy(instance)
-            request.os_conn.network.delete_port(instance.port_id)
-            return Response("删除成功", status=status.HTTP_201_CREATED)
+            return Response("this is radware")
 
 
 class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
@@ -156,48 +184,53 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        try:
-            lb = LoadBalance.objects.get(id=data['lb_id'])
-            lb_listener_name = lb.ip + ":" + str(data['port']) + "-" + data['protocol'] + "-lbvs"
-            LoadBalanceListener.create_lb_listener(ns_session=ns_conn,
-                                                      name=lb_listener_name,
-                                                      address=lb.ip,
-                                                      port=data['port'],
-                                                      protocol=data['protocol'],
-                                                      lbmethod=data.get('algorithm', 'ROUNDROBIN'))
-        except nitro_exception as exc:
-            logger.error(f"try creating LoadBalance Listener {data['name']} : {exc}")
-            return Response({
-                "detail": f"{exc}"
-            }, status=status.HTTP_400_BAD_REQUEST)
+        lb = LoadBalance.objects.get(id=data['lb_id'])
+        if lb.provider == "citrix":
+            try:
+                lb_listener_name = lb.ip + ":" + str(data['port']) + "-" + data['protocol'] + "-lbvs"
+                LoadBalanceListener.create_lb_listener(ns_session=ns_conn,
+                                                       name=lb_listener_name,
+                                                       address=lb.ip,
+                                                       port=data['port'],
+                                                       protocol=data['protocol'],
+                                                       lbmethod=data.get('algorithm', 'ROUNDROBIN'))
+            except nitro_exception as exc:
+                logger.error(f"try creating LoadBalance Listener {data['name']} : {exc}")
+                return Response({
+                    "detail": f"{exc}"
+                }, status=status.HTTP_400_BAD_REQUEST)
         else:
-            serializer.save(
-                name=lb_listener_name,
-                lb_id=data['lb_id'],
-                protocol=data['protocol'],
-                port=data['port'],
-                type="4层",
-                algorithm=data.get('algorithm', 'ROUNDROBIN'),
-            )
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            return Response("this is radware")
+        serializer.save(
+            name=lb_listener_name,
+            lb_id=data['lb_id'],
+            protocol=data['protocol'],
+            port=data['port'],
+            type="4层",
+            algorithm=data.get('algorithm', 'ROUNDROBIN'),
+        )
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def destroy(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
         instance = self.get_object()
-        try:
-            if LoadBalanceMember.objects.filter(listener_id=instance.id):
-                for member in LoadBalanceMember.objects.filter(listener_id=instance.id):
-                    member.delete()
-            instance.delete_lb_listener(ns_session=ns_conn, name=instance.name)
-        except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance Listener {instance.id} : {exc}")
-            return Response({
-                "detail": f"{exc}"
-            }, status=status.HTTP_400_BAD_REQUEST)
+        lb = LoadBalance.objects.get(id=instance.lb_id)
+        if lb.provider == "citrix":
+            try:
+                if LoadBalanceMember.objects.filter(listener_id=instance.id):
+                    for member in LoadBalanceMember.objects.filter(listener_id=instance.id):
+                        member.delete()
+                instance.delete_lb_listener(ns_session=ns_conn, name=instance.name)
+            except nitro_exception as exc:
+                logger.error(f"try Delete LoadBalance Listener {instance.id} : {exc}")
+                return Response({
+                    "detail": f"{exc}"
+                }, status=status.HTTP_400_BAD_REQUEST)
         else:
-            self.perform_destroy(instance)
-            return Response("删除成功", status=status.HTTP_201_CREATED)
+            return Response("this is radware")
+        self.perform_destroy(instance)
+        return Response("删除成功", status=status.HTTP_201_CREATED)
 
     def list_page(self, qs):
         queryset = self.filter_queryset(qs)
@@ -253,7 +286,6 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         if not self.request.GET.get('listener_id'):
             return qs
         qs = qs.filter(listener_id=self.request.GET.get('listener_id'))
-
         return qs
 
     @action(detail=False, methods=['post'])
@@ -262,47 +294,53 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        try:
-            listener = LoadBalanceListener.objects.get(id=data['listener_id'])
-            protocol = listener.protocol
-            lbvs_name = listener.name
-            LoadBalanceMember.add_member(ns_session=ns_conn,
-                                         address=data['ip'],
-                                         port=data['port'],
-                                         weight=data.get('weight', 1),
-                                         protocol=protocol,
-                                         vs_name=lbvs_name)
-        except nitro_exception as exc:
-            logger.error(f"try add LoadBalance member v4 : {exc}")
-            return Response({
-                "detail": f"{exc}"
-            }, status=status.HTTP_400_BAD_REQUEST)
+        listener = LoadBalanceListener.objects.get(id=data['listener_id'])
+        lb = LoadBalance.objects.get(id=listener.lb_id)
+        if lb.provider == "citrix":
+            try:
+                protocol = listener.protocol
+                lbvs_name = listener.name
+                LoadBalanceMember.add_member(ns_session=ns_conn,
+                                             address=data['ip'],
+                                             port=data['port'],
+                                             weight=data.get('weight', 1),
+                                             protocol=protocol,
+                                             vs_name=lbvs_name)
+            except nitro_exception as exc:
+                logger.error(f"try add LoadBalance member v4 : {exc}")
+                return Response({
+                    "detail": f"{exc}"
+                }, status=status.HTTP_400_BAD_REQUEST)
         else:
-            serializer.save(
-                listener_id=data['listener_id'],
-                ip=data['ip'],
-                port=data['port'],
-                weight=data.get('weight', 1)
-            )
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            return Response("this is radware")
+        serializer.save(
+            listener_id=data['listener_id'],
+            ip=data['ip'],
+            port=data['port'],
+            weight=data.get('weight', 1)
+        )
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def destroy(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
         instance = self.get_object()
-        try:
-            listener = LoadBalanceListener.objects.get(id=instance.listener_id)
-            lbvs_name = listener.name
-            member_name = instance.ip + ":" + str(instance.port) + "-" + listener.protocol
-            instance.delete_lb_member(ns_conn, lbvs_name=lbvs_name, member_name=member_name)
-        except nitro_exception as exc:
-            logger.error(f"try Delete LoadBalance {instance.id} : {exc}")
-            return Response({
-                "detail": f"{exc}"
-            }, status=status.HTTP_400_BAD_REQUEST)
+        listener = LoadBalanceListener.objects.get(id=instance.listener_id)
+        lb = LoadBalance.objects.get(id=listener.lb_id)
+        if lb.provider == "citrix":
+            try:
+                lbvs_name = listener.name
+                member_name = instance.ip + ":" + str(instance.port) + "-" + listener.protocol
+                instance.delete_lb_member(ns_conn, lbvs_name=lbvs_name, member_name=member_name)
+            except nitro_exception as exc:
+                logger.error(f"try Delete LoadBalance {instance.id} : {exc}")
+                return Response({
+                    "detail": f"{exc}"
+                }, status=status.HTTP_400_BAD_REQUEST)
         else:
-            self.perform_destroy(instance)
-            return Response("删除成功", status=status.HTTP_201_CREATED)
+            return Response("this is radware")
+        self.perform_destroy(instance)
+        return Response("删除成功", status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
