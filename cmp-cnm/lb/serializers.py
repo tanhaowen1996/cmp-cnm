@@ -36,6 +36,18 @@ class LoadBalanceSerializer(serializers.ModelSerializer):
         )
 
 
+class UpdateLoadBalanceSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(required=False)
+    description = serializers.CharField(required=False)
+
+    class Meta:
+        model = LoadBalance
+        fields = (
+            'name',
+            'description',
+        )
+
+
 class LoadBalanceListenerSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(required=False)
     name = serializers.CharField(required=False)
