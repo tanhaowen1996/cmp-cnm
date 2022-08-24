@@ -36,4 +36,3 @@ class LoadBalanceMemberFilter(FilterSet):
     class Meta:
         mode = LoadBalanceMember
         filter = ('name', 'id', 'is_public')
-
