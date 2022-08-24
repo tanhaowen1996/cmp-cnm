@@ -52,6 +52,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     serializer_class = LoadBalanceSerializer
     update_serializer_class = UpdateLoadBalanceSerializer
     queryset = LoadBalance.objects.all()
+
     def get_queryset(self):
         qs = super().get_queryset()
         if not self.request.user.is_staff:
@@ -244,12 +245,38 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         return serializer
 
     def list(self, request, *args, **kwargs):
+        # serializer = self.get_serializer(data=request.data)
+        # serializer.is_valid(raise_exception=True)
+        # data = serializer.validated_data
+        # import pdb
+        # pdb.set_trace()
+        ns_conn = NSMixin.get_session()
         qs = super().get_queryset()
-        if not request.GET.get('lb_id'):
-            qs = qs.filter(Q(protocol="TCP") | Q(protocol="UDP"))
+        if not (request.GET.get('lb_id') or request.data.get('lb_id')):
+            return Response("missing parameter lb_id", status=status.HTTP_400_BAD_REQUEST)
         else:
-            qs = qs.filter(Q(lb_id=request.GET.get('lb_id')) & (Q(protocol="TCP") | Q(protocol="UDP")))
+            qs = qs.filter(lb_id=request.GET.get('lb_id', request.data.get('lb_id')))
         serializer = self.list_page(qs)
+        lb = LoadBalance.objects.get(id=request.GET.get('lb_id', request.data.get('lb_id')))
+        if lb.provider == "citrix":
+            for listener in serializer.data:
+                ns_listener, ns_members = LoadBalanceListener.get_status(ns_session=ns_conn, name=listener.get('name'))
+                if int(ns_listener.totalservices):
+                    stat = format(float(format(float(ns_listener.activeservices)/float(ns_listener.totalservices), '.4f'))*100, '.2f') + "%"
+                else:
+                    stat = "0.00%"
+                all_member = []
+                for ns_member in ns_members:
+                    mem = {'name': ns_member.servicename, 'status': ns_member.curstate}
+                    all_member.append(mem)
+                LoadBalanceListener.objects.filter(id=listener.get('id')).update(
+                    all_member=all_member,
+                    member_num=int(ns_listener.totalservices),
+                    status=stat
+                )
+            serializer = self.list_page(qs)
+        else:
+            pass
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -341,6 +368,27 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             return Response("this is radware")
         self.perform_destroy(instance)
         return Response("删除成功", status=status.HTTP_201_CREATED)
+
+    def list_page(self, qs):
+        queryset = self.filter_queryset(qs)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return serializer
+
+        serializer = self.get_serializer(queryset, many=True)
+        return serializer
+
+    def list(self, request, *args, **kwargs):
+        ns_conn = NSMixin.get_session()
+        qs = super().get_queryset()
+        if not (request.GET.get('listener_id') or request.data.get('listener_id')):
+            return Response("missing parameter listener_id", status=status.HTTP_400_BAD_REQUEST)
+        else:
+            qs = qs.filter(listener_id=request.GET.get('listener_id', request.data.get('listener_id')))
+        serializer = self.list_page(qs)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
