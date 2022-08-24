@@ -4,13 +4,10 @@ from rest_framework import (
     authentication,
     exceptions
 )
-from base64 import b64decode
 from keystoneauth1 import session
 from keystoneauth1.identity import v3
 from .utils import openstack
 import logging
-import json
-
 
 logger = logging.getLogger(__package__)
 
