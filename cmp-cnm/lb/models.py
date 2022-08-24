@@ -165,6 +165,11 @@ class LoadBalanceListener(models.Model):
         else:
             citrix_client.delete_lb_listener_csvs(ns_session, name)
 
+    def get_status(ns_session, name):
+        listener = citrix_client.get_lbvs(session=ns_session, name=name)
+        member = citrix_client.lb_vs_member_list(session=ns_session, lb_vs_name=name)
+        return listener, member
+
 
 class LoadBalanceMember(models.Model):
     id = models.UUIDField(
