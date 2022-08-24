@@ -11,5 +11,3 @@ class OpenstackMixin:
     @staticmethod
     def get_conn():
         return openstack.connect()
-
-

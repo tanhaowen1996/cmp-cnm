@@ -147,17 +147,17 @@ class LoadBalanceListener(models.Model):
 
     @classmethod
     def create_lb_listener(cls, ns_session,
-                              name,
-                              address,
-                              port,
-                              protocol,
-                              lbmethod):
+                           name,
+                           address,
+                           port,
+                           protocol,
+                           lbmethod):
         citrix_client.create_lb_listener(ns_session,
-                                            name,
-                                            address,
-                                            port,
-                                            protocol,
-                                            lbmethod)
+                                         name,
+                                         address,
+                                         port,
+                                         protocol,
+                                         lbmethod)
 
     def delete_lb_listener(self, ns_session, name):
         if "lbvs" in name or "_" in name:

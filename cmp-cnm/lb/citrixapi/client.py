@@ -1,6 +1,5 @@
 from nssrc.com.citrix.netscaler.nitro.exception.nitro_exception import nitro_exception
 from nssrc.com.citrix.netscaler.nitro.resource.config.cs.csvserver import csvserver
-from nssrc.com.citrix.netscaler.nitro.resource.config.cs.csvserver_cspolicy_binding import csvserver_cspolicy_binding
 from nssrc.com.citrix.netscaler.nitro.resource.config.cs.cspolicy import cspolicy
 from nssrc.com.citrix.netscaler.nitro.resource.config.cs.csaction import csaction
 from nssrc.com.citrix.netscaler.nitro.resource.config.lb.lbvserver import lbvserver
@@ -10,30 +9,6 @@ from nssrc.com.citrix.netscaler.nitro.resource.config.basic.server import server
 from nssrc.com.citrix.netscaler.nitro.resource.config.network.vlan import vlan
 from nssrc.com.citrix.netscaler.nitro.resource.config.network.vlan_interface_binding import vlan_interface_binding
 from nssrc.com.citrix.netscaler.nitro.resource.config.ns.nsip import nsip
-from cmp_cnm.settings import HTTP_FILE
-import os
-
-"""
-负载均衡创建：
-创建负载均衡 create_lb
-4层负载均衡创建方式：
-   创建4层监听：create_lb_listener -> create_lb_true_policy -> create_lb_action(action和lbvs)
-   添加member：add_lb_member(lbvs_name==action_name==policy_name) -> 检查是否存在member ->(否) create_lb_member
-   -> 检查是否存在server -> (否) 创建service时添加server（server_name == ipaddress）
-   lb_name = lb_name
-   lb_listener_name = vip:port-protocol
-7层负载均衡创建方式：
-   创建7层监听：create_lb_listener
-   创建域名：create_lb_host(policy) -> 
-   添加member：add_lb_member(lbvs_name==action_name==policy_name) -> 检查是否存在member ->(否) create_lb_member
-   -> 检查是否存在server -> (否) 创建service时添加server（server_name == ipaddress）
-   lb_name = lb_name
-   lb_listener_name = vip:port-protocol
-   lb_host_name = lb_listener_name-host_name
-   lb_path_name = lb_host_name-1,lb_host_name-2....lb_host_name-n
-   lb_path_name = lb_action_name = lb_vs_name
-   member_name = member_ip:port-protocol
-"""
 
 
 def create_lb(session, name, address):

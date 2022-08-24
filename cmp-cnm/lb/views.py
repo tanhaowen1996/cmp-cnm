@@ -1,4 +1,3 @@
-from django.db.models import Q
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -11,7 +10,6 @@ from .filters import LoadBalanceFilter, LoadBalanceListenerFilter, LoadBalanceMe
 from .citrixapi.session import NSMixin
 import logging
 import openstack
-from datetime import datetime
 
 logger = logging.getLogger(__package__)
 
@@ -262,7 +260,9 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             for listener in serializer.data:
                 ns_listener, ns_members = LoadBalanceListener.get_status(ns_session=ns_conn, name=listener.get('name'))
                 if int(ns_listener.totalservices):
-                    stat = format(float(format(float(ns_listener.activeservices)/float(ns_listener.totalservices), '.4f'))*100, '.2f') + "%"
+                    stat = format(float(format(float
+                                               (ns_listener.activeservices)/float(ns_listener.totalservices), '.4f')
+                                        )*100, '.2f') + "%"
                 else:
                     stat = "0.00%"
                 all_member = []
@@ -381,7 +381,6 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         return serializer
 
     def list(self, request, *args, **kwargs):
-        ns_conn = NSMixin.get_session()
         qs = super().get_queryset()
         if not (request.GET.get('listener_id') or request.data.get('listener_id')):
             return Response("missing parameter listener_id", status=status.HTTP_400_BAD_REQUEST)
@@ -397,7 +396,14 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             listener = LoadBalanceListener.objects.get(id=instance.listener_id)
             lbvs_name = listener.name
             member_name = instance.ip + ":" + str(instance.port) + "-" + listener.protocol
-            instance.update_lb_member(ns_conn, lbvs_name, member_name, request.data['ip'], request.data['port'], request.data['weight'], listener.protocol)
+            instance.update_lb_member(ns_conn,
+                                      lbvs_name,
+                                      member_name,
+                                      request.data['ip'],
+                                      request.data['port'],
+                                      request.data['weight'],
+                                      listener.protocol
+                                      )
             serializer = self.get_serializer(instance, data=request.data)
             serializer.is_valid(raise_exception=True)
         except nitro_exception as exc:

@@ -10,7 +10,3 @@ class NSMixin:
         ns_session = nitro_service(NS_HOST, NS_PROTOCOL)
         ns_session.login(NS_USER, NS_PASSWD, NS_TIME)
         return ns_session
-
-
-
-
