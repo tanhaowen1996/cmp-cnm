@@ -67,16 +67,30 @@ def delete_lb(session, name):
         raise exc
 
 
-def get_lb(session, name):
+def get_lbvs(session, name):
     try:
-        csvs = csvserver()
-        return csvs.get(session, name)
+        lbvs = lbvserver.get(client=session, name=name)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
         raise exc
+    else:
+        return lbvs
+
+
+def get_lb(session, name):
+    try:
+        csvs = csvserver().get(session, name)
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+        raise exc
+    else:
+        return csvs
 
 
 def create_lb_listener(session, name, address, port, protocol, lbmethod):
@@ -167,17 +181,15 @@ def lb_vs_member_list(session, lb_vs_name):
     获取lbvs下的lb_service的列表
     """
     try:
-        service_list = lbvserver_service_binding.get(session, lb_vs_name)
-        if service_list:
-            return service_list
-        else:
-            print("EXception::getservice ERROR")
+        service_list = lbvserver_service_binding.get(session, name=lb_vs_name)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
         raise exc
+    else:
+        return service_list
 
 
 def lb_member_list(session):
@@ -190,13 +202,14 @@ def lb_member_list(session):
         lb_member = []
         for member_name in result:
             lb_member.append(member_name.name)
-        return lb_member
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
         raise exc
+    else:
+        return lb_member
 
 
 def add_lb_member(session, address, port, weight, protocol, vs_name):
@@ -258,13 +271,14 @@ def list_server(session):
         lb_servers = []
         for lb_server in result:
             lb_servers.append(lb_server.ipaddress)
-        return lb_servers
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
         raise exc
+    else:
+        return lb_servers
 
 
 def create_lb_member(session, address, port, protocol):
