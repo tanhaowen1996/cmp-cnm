@@ -26,7 +26,6 @@ SECRET_KEY = 'django-insecure-pg-2*hls3&x0oz@6tgg-t&2_d5*7+u4mj3ky)fhst)254g_^x(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.getenv('DEBUG', 0)))
 
-
 ALLOWED_HOSTS = ['*']
 APPEND_SLASH = False
 
@@ -43,7 +42,9 @@ INSTALLED_APPS = [
     'cmp_cnm',
     'nssrc',
     'lb',
-    'lb.citrixapi'
+    'lb.citrixapi',
+    'lb.radwareapi',
+    'rest_framework',
 ]
 
 REST_FRAMEWORK = {
@@ -105,10 +106,10 @@ WSGI_APPLICATION = 'cmp_cnm.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'cmp_iaas'),
-        'USER': os.getenv('DB_USER', 'cmp_iaas'),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+        'NAME': os.getenv('DB_NAME', 'cmp_cnm'),
+        'USER': os.getenv('DB_USER', 'cmp_cnm'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'cmp_cnm'),
+        'HOST': os.getenv('DB_HOST', '10.208.224.79'),
         'PORT': int(os.getenv('DB_PORT', 5432)),
         'CONN_MAX_AGE': 3
     }
@@ -218,17 +219,21 @@ OS_AUTH_URL = os.getenv('OS_AUTH_URL', '')
 OS_INTERFACE = os.getenv('OS_INTERFACE', 'internal')
 OS_ENDPOINT_TYPE = os.getenv('OS_ENDPOINT_TYPE', 'internalURL')
 OS_IDENTITY_API_VERSION = int(os.getenv('OS_IDENTITY_API_VERSION', '3'))
-OS_REGION_NAME = os.getenv('OS_REGION_NAME', '')
+OS_REGION_NAME = os.getenv('OS_REGION_NAME', 'test')
 OS_AUTH_PLUGIN = os.getenv('OS_AUTH_PLUGIN', 'password')
+OS_REGION_MAWEI = os.getenv('OS_REGION_MAWEI', 'test')
 
 OS_TOKEN_KEY = os.getenv('OPENSTACK_TOKEN_KEY', 'Os-Token')
 
-NS_HOST = os.getenv('NS_HOST', '127.0.0.1')
+NS_HOST = os.getenv('NS_HOST', '10.209.0.65')
 NS_PROTOCOL = os.getenv('NS_PROTOCOL', 'http')
-NS_USER = os.getenv('NS_USER', '')
-NS_PASSWD = os.getenv('NS_PASSWD', '')
+NS_USER = os.getenv('NS_USER', 'nsroot')
+NS_PASSWD = os.getenv('NS_PASSWD', 'r00tme')
 NS_TIME = os.getenv('NS_TIME', 3600)
-HTTP_FILE = os.getenv('HTTP_FILE', '127.0.0.1')
+HTTP_FILE = os.getenv('HTTP_FILE', '10.208.0.49:8080')
+RW_URL = os.getenv('RW_URL', 'https://10.209.0.61')
+RW_USER = os.getenv('RW_USER', 'admin')
+RW_PASSWD = os.getenv('RW_PASSWD', 'radware')
 
 ACCOUNT_INFO_KEY = os.getenv('ACCOUNT_INFO_KEY', 'Account-Info')
 
