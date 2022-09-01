@@ -2,6 +2,7 @@ from django.contrib.postgres.indexes import BrinIndex
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from .citrixapi import client as citrix_client
+from .radwareapi import client as radware_client
 from .utils import OpenstackMixin
 import uuid
 
@@ -69,11 +70,11 @@ class LoadBalance(models.Model, OpenstackMixin):
         indexes = (BrinIndex(fields=['updated_at', 'created_at']),)
 
     @classmethod
-    def create_lb(cls, ns_session, name, address):
+    def create_nslb(cls, ns_session, name, address):
         pass
         # citrix_client.create_lb(ns_session, name, address)
 
-    def delete_lb(self, ns_session, name):
+    def delete_nslb(self, ns_session, name):
         if citrix_client.get_lb(session=ns_session, name=name):
             citrix_client.delete_lb(ns_session, name)
         pass
@@ -94,6 +95,8 @@ class LoadBalance(models.Model, OpenstackMixin):
 
     # def get_cslb(ns_session, name):
     #     return citrix_client.get_lb(ns_session, name)
+    def create_rwlb(rw_session, lb_id, address):
+        radware_client.create_lb(session=rw_session, lb_id=lb_id, address=address)
 
 
 class LoadBalanceListener(models.Model):
@@ -169,6 +172,14 @@ class LoadBalanceListener(models.Model):
         listener = citrix_client.get_lbvs(session=ns_session, name=name)
         member = citrix_client.lb_vs_member_list(session=ns_session, lb_vs_name=name)
         return listener, member
+
+    def create_rd_lb_listener(self, rw_session, lb_id, listener_id, address, port, protocol):
+        radware_client.create_listener(session=rw_session,
+                                       lb_id=lb_id,
+                                       listener_id=listener_id,
+                                       address=address,
+                                       port=port,
+                                       protocol=protocol)
 
 
 class LoadBalanceMember(models.Model):
