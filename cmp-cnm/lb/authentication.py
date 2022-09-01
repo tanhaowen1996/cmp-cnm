@@ -30,7 +30,7 @@ class OSAuthentication(authentication.BaseAuthentication):
                 session=session.Session(auth=os_auth),
                 identity_api_version=settings.OS_IDENTITY_API_VERSION,
                 interface=settings.OS_INTERFACE,
-                region_name=settings.OS_REGION_NAME,
+                region_name=request.headers.get("Region"),
             )
         except Exception as exc:
             msg = f"invalid request header: {exc}"
