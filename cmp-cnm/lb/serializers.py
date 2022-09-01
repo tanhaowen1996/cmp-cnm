@@ -11,7 +11,7 @@ class LoadBalanceSerializer(serializers.ModelSerializer):
     network_id = serializers.UUIDField(required=False)
     subnet_id = serializers.UUIDField(required=False)
     port_id = serializers.UUIDField(required=False)
-    provider = serializers.UUIDField(required=False)
+    provider = serializers.CharField(required=False)
     status = serializers.CharField(required=False)
     description = serializers.CharField(required=False)
     tenant_id = serializers.CharField(required=False)
@@ -19,21 +19,7 @@ class LoadBalanceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LoadBalance
-        fields = (
-            'id',
-            'name',
-            'net_type',
-            'ip',
-            'network_id',
-            'subnet_id',
-            'port_id',
-            'provider',
-            'status',
-            'description',
-            'tenant_id',
-            'tenant_name',
-            'created_at'
-        )
+        fields = '__all__'
 
 
 class UpdateLoadBalanceSerializer(serializers.ModelSerializer):
@@ -62,18 +48,7 @@ class LoadBalanceListenerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LoadBalanceListener
-        fields = (
-            'id',
-            'name',
-            'lb_id',
-            'protocol',
-            'port',
-            'type',
-            'algorithm',
-            'status',
-            'member_num',
-            'all_member',
-        )
+        fields = '__all__'
 
 
 class LoadBalanceMemberSerializer(serializers.ModelSerializer):
@@ -85,10 +60,4 @@ class LoadBalanceMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LoadBalanceMember
-        fields = (
-            'id',
-            'listener_id',
-            'ip',
-            'port',
-            'weight'
-        )
+        fields = '__all__'
