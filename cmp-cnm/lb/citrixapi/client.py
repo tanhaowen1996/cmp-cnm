@@ -11,25 +11,6 @@ from nssrc.com.citrix.netscaler.nitro.resource.config.network.vlan_interface_bin
 from nssrc.com.citrix.netscaler.nitro.resource.config.ns.nsip import nsip
 
 
-def create_lb(session, name, address):
-    """
-    新建Content Switching vs 作为负载均衡，默认先创建一个协议为any的Content Switching
-    """
-    try:
-        csvs = csvserver()
-        csvs.name = name
-        csvs.servicetype = "ANY"
-        csvs.ipv46 = address
-        csvs.port = "*"
-        csvserver.add(session, csvs)
-    except nitro_exception as exc:
-        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
-        raise exc
-    except Exception as exc:
-        print("Exception::message=" + str(exc.args))
-        raise exc
-
-
 def delete_lb(session, name):
     try:
         csvs_list = csvserver()
