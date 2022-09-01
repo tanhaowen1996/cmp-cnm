@@ -1,21 +1,207 @@
 import requests
-from requests.auth import HTTPBasicAuth
+from requests import exceptions
 import urllib3
 from urllib3.exceptions import InsecureRequestWarning
+from cmp_cnm.settings import RW_URL
 
 urllib3.disable_warnings(InsecureRequestWarning)
 
 
-url = "https://10.210.240.254/config/SlbCurCfgEnhVirtServerTable"
-user_pwd = "admin:radware"
+def apply_save(session):
+    apply_url = RW_URL + "/config?action=apply"
+    save_url = RW_URL + "/config?action=save"
+    requests.post(url=apply_url, auth=session, verify=False)
+    requests.post(url=save_url, auth=session, verify=False)
+
+def create_lb(session, lb_id, address):
+    url = RW_URL + "/config/SlbNewCfgEnhVirtServerTable/" + lb_id + "/"
+    payload = '''
+    {
+        "VirtServerIpAddress": %s,
+        "VirtServerState": 2
+    }
+    '''
+    payload = payload % address
+    try:
+        requests.post(url, auth=session, data=payload, verify=False)
+        apply_save(session=session)
+    except exceptions.Timeout as e:
+        print(e)
+    except exceptions.HTTPError as e:
+        print(e)
+    # else:
+    # return response.json()
 
 
-r = requests.get(url, auth=HTTPBasicAuth('admin', 'radware'), verify=False)
-print(r.status_code)
+def get_lb_list(session):
+    url = RW_URL + "/config/SlbNewCfgEnhVirtServerTable"
+    r = requests.get(url, auth=session, verify=False)
+    response_dict = r.json()
+    VServers = response_dict.get("SlbNewCfgEnhVirtServerTable")
+    return VServers
 
-respone_dict = r.json()
 
-vs = respone_dict.get("SlbCurCfgEnhVirtServerTable")
+def get_lb(session, lb_id):
+    url = RW_URL + "/config/SlbNewCfgEnhVirtServerTable/" + lb_id
+    response = requests.get(url, auth=session, verify=False)
+    response_dict = response.json()
+    VServer = response_dict.get("SlbNewCfgEnhVirtServerTable")
+    return VServer
 
-for v in vs:
-    print(v)
+
+def delete_lb(session, lb_id):
+    url = RW_URL + "/config/SlbNewCfgEnhVirtServerTable/" + lb_id
+    requests.delete(url, auth=session, verify=False)
+    apply_save(session=session)
+
+
+def create_listener(session, lb_id, listener_id, address, port, protocol):
+    UDPBalance = 3
+    if protocol == "UDP":  # 如果是udp协议的则重新创建一个新的负载均衡，该负载均衡不被数据库记录，查询时通过id_udp查询
+        UDPBalance = 2
+        lb_id = lb_id + "_udp"
+        if not get_lb(session=session, lb_id=lb_id):
+            create_lb(session=session, lb_id=lb_id, address=address)
+    lb = get_lb_listener_list(session=session, lb_id=lb_id)
+    index = 1
+    if lb:
+        index = lb[len(lb) - 1].get("Index") + 1
+    create_group(session=session, listener_id=listener_id)
+    url1 = RW_URL + "/config/SlbNewCfgEnhVirtServicesTable/" + lb_id + "/" + index
+    payload1 = '''
+                {
+                    "VirtPort": %s,
+                    "RealPort": 0,
+                    "DBind": 2,
+                    "PBind": 3,
+                    "UDPBalance": %s
+                }
+                '''
+    payload1 = payload1 % port, UDPBalance
+    requests.post(url=url1, auth=session, data=payload1, verify=False)
+    url5 = RW_URL + "/config/SlbNewCfgEnhVirtServicesFifthPartTable/" + lb_id + "/" + index
+    ServApplicationType = 1
+    if port == 443:
+        ServApplicationType = 8
+    if port == 80:
+        ServApplicationType = 6
+    payload5 = '''
+            {
+                "ServApplicationType": %s
+            }
+            '''
+    payload5 = payload5 % ServApplicationType
+    requests.put(url=url5, auth=session, data=payload5, verify=False)
+    payload7 = '''
+        {
+            "RealGroup": %s,
+            "PersistentTimeOut": 0,
+            "ProxyIpMode": 2,
+            "ProxyIpaddr": %s,
+            "ProxyIpMask": "255.255.255.255"
+        }
+        '''
+    payload7 = payload7 % listener_id, address
+    url7 = RW_URL + "/config/SlbNewCfgEnhVirtServicesSeventhPartTable/" + lb_id + "/" + index
+    requests.put(url=url7, auth=session, data=payload7, verify=False)
+
+
+def get_lb_listener_list(session, lb_id):
+    url = RW_URL + "/config/SlbNewCfgEnhVirtServicesTable/" + lb_id
+    response = requests.get(url=url, auth=session, verify=False)
+    response_dict = response.json()
+    VService = response_dict.get("SlbNewCfgEnhVirtServicesTable")
+    return VService
+
+
+def get_listener_index(session, lb_id, port):
+    VServices = get_lb_listener_list(session=session, lb_id=lb_id)
+    for VService in VServices:
+        if port == VService.get("VirtPort"):
+            return VService.get("Index")
+    return 1
+
+
+def get_listener(session, lb_id, port):
+    index = get_listener_index(session=session, lb_id=lb_id, port=port)
+    url = RW_URL + "/config/SlbNewCfgEnhVirtServicesTable/" + lb_id + "/" + index
+    requests.get(url=url, auth=session, verify=False)
+
+
+def delete_listener(session, lb_id, port, listener_id, protocol):
+    if protocol == "UDP":
+        lb_id = lb_id + "_udp"
+    index = get_listener_index(session=session, lb_id=lb_id, port=port)
+    url = RW_URL + "/config/SlbNewCfgEnhVirtServicesTable/" + lb_id + "/" + index
+    requests.delete(url=url, auth=session, verify=False)
+    delete_group(session=session, listener_id=listener_id)
+    apply_save(session=session)
+
+
+def create_group(session, listener_id):
+    url = RW_URL + "/config/SlbNewCfgEnhGroupTable/" + listener_id
+    payload = '''
+        {
+            "Metric": 1,
+            "HealthCheckLayer": 2
+        }
+        '''
+    requests.post(url=url, auth=session, data=payload, verify=False)
+    apply_save(session=session)
+
+
+def delete_group(session, listener_id):
+    url = RW_URL + "/config/SlbNewCfgEnhGroupTable/" + listener_id
+    requests.delete(url=url, auth=session, verify=False)
+    apply_save(session=session)
+
+
+def create_member(session, member_id, ip, port, weight):
+    url = RW_URL + "/config/SlbNewCfgEnhRealServerTable/" + member_id
+    payload = '''
+            {
+                "IpAddr": %s,
+                "State": 2,
+                "Type": 1,
+                "Weight": %s
+            }
+            '''
+    payload = payload % ip, weight
+    requests.post(url=url, auth=session, data=payload, verify=False)
+    apply_save(session=session)
+    payload_port = '''
+            {
+                "RealPort": %s
+            }
+            '''
+    payload_port = payload_port % port
+    url_port = RW_URL + "/config/SlbNewCfgEnhRealServPortTable/" + member_id + "/1"
+    requests.post(url=url_port, auth=session, data=payload_port, verify=False)
+    apply_save(session=session)
+
+
+def add_member(session, ip, port, member_id, weight, listener_id):
+    create_member(session=session, member_id=member_id, ip=ip, port=port, weight=weight)
+    url = RW_URL + "/config/SlbNewCfgEnhGroupTable/" + listener_id
+    payload = '''
+                {
+                    "AddServer": %s
+                }
+                '''
+    payload = payload % member_id
+    requests.put(url=url, auth=session, data=payload, verify=False)
+    apply_save(session=session)
+
+
+def delete_member(session, member_id):
+    url = RW_URL + "/config/SlbNewCfgEnhRealServerTable/" + member_id
+    requests.delete(url=url, auth=session, verify=False)  # 需要保证每个member都只被唯一一个group使用
+    apply_save(session=session)
+
+
+def get_members(session, listener_id):
+    url = RW_URL + "/config/SlbEnhGroupRealServersTable/" + listener_id
+    response = requests.get(url=url, auth=session, verify=False)
+    response_dict = response.json()
+    VService = response_dict.get("SlbEnhGroupRealServersTable")
+    return VService
