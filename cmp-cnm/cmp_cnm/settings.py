@@ -235,19 +235,12 @@ RW_URL = os.getenv('RW_URL', 'https://10.209.0.61')
 RW_USER = os.getenv('RW_USER', 'admin')
 RW_PASSWD = os.getenv('RW_PASSWD', 'radware')
 
-ACCOUNT_INFO_KEY = os.getenv('ACCOUNT_INFO_KEY', 'Account-Info')
-
 SWAGGER = bool(int(os.getenv('SWAGGER', 0)))
 
 if SWAGGER:
     SWAGGER_SETTINGS = {
         'LOGOUT_URL': '/admin/logout/',
         'SECURITY_DEFINITIONS': {
-            ACCOUNT_INFO_KEY: {
-                'type': 'apiKey',
-                'name': ACCOUNT_INFO_KEY.lower(),
-                'in': 'header'
-            },
             OS_TOKEN_KEY: {
                 'type': 'apiKey',
                 'name': OS_TOKEN_KEY.lower(),

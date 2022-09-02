@@ -98,6 +98,10 @@ class LoadBalance(models.Model, OpenstackMixin):
     def create_rwlb(rw_session, lb_id, address):
         radware_client.create_lb(session=rw_session, lb_id=lb_id, address=address)
 
+    def delete_rwlb(rw_session, lb_id):
+        radware_client.delete_lb(session=rw_session, lb_id=str(lb_id))
+
+
 
 class LoadBalanceListener(models.Model):
     id = models.UUIDField(
@@ -173,12 +177,19 @@ class LoadBalanceListener(models.Model):
         member = citrix_client.lb_vs_member_list(session=ns_session, lb_vs_name=name)
         return listener, member
 
-    def create_rd_lb_listener(self, rw_session, lb_id, listener_id, address, port, protocol):
+    def create_rd_lb_listener(rw_session, lb_id, listener_id, address, port, protocol):
         radware_client.create_listener(session=rw_session,
-                                       lb_id=lb_id,
-                                       listener_id=listener_id,
+                                       lb_id=str(lb_id),
+                                       listener_id=str(listener_id),
                                        address=address,
                                        port=port,
+                                       protocol=protocol)
+
+    def delete_rw_listener(rw_session, lb_id, port, listener_id, protocol):
+        radware_client.delete_listener(session=rw_session,
+                                       lb_id=str(lb_id),
+                                       port=port,
+                                       listener_id=str(listener_id),
                                        protocol=protocol)
 
 
@@ -227,3 +238,9 @@ class LoadBalanceMember(models.Model):
 
     def update_lb_member(self, ns_session, lbvs_name, member_name, ip, port, weight, protocol):
         citrix_client.update_lb_member(ns_session, lbvs_name, member_name, ip, port, weight, protocol)
+
+    def add_rw_member(rw_session, ip, port, member_id, listener_id, weight=1):
+        radware_client.add_member(session=rw_session, ip=ip, port=port, member_id=str(member_id), weight=weight, listener_id=str(listener_id))
+
+    def delete_rw_member(rw_session, member_id):
+        radware_client.delete_member(session=rw_session, member_id=str(member_id))
