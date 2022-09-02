@@ -13,6 +13,7 @@ def apply_save(session):
     requests.post(url=apply_url, auth=session, verify=False)
     requests.post(url=save_url, auth=session, verify=False)
 
+
 def create_lb(session, lb_id, address):
     url = RW_URL + "/config/SlbNewCfgEnhVirtServerTable/" + lb_id + "/"
     payload = '''
@@ -37,22 +38,44 @@ def get_lb_list(session):
     url = RW_URL + "/config/SlbNewCfgEnhVirtServerTable"
     r = requests.get(url, auth=session, verify=False)
     response_dict = r.json()
-    VServers = response_dict.get("SlbNewCfgEnhVirtServerTable")
-    return VServers
+    try:
+        VServers = response_dict.get("SlbNewCfgEnhVirtServerTable")
+    except exceptions.Timeout as e:
+        print(e)
+    except exceptions.HTTPError as e:
+        print(e)
+    else:
+        return VServers
 
 
 def get_lb(session, lb_id):
     url = RW_URL + "/config/SlbNewCfgEnhVirtServerTable/" + lb_id
     response = requests.get(url, auth=session, verify=False)
     response_dict = response.json()
-    VServer = response_dict.get("SlbNewCfgEnhVirtServerTable")
-    return VServer
+    try:
+        VServer = response_dict.get("SlbNewCfgEnhVirtServerTable")
+    except exceptions.Timeout as e:
+        print(e)
+    except exceptions.HTTPError as e:
+        print(e)
+    else:
+        return VServer
 
 
 def delete_lb(session, lb_id):
     url = RW_URL + "/config/SlbNewCfgEnhVirtServerTable/" + lb_id
-    requests.delete(url, auth=session, verify=False)
-    apply_save(session=session)
+    try:
+        requests.delete(url, auth=session, verify=False)
+        apply_save(session=session)
+        lb_id_udp = lb_id + "_udp"
+        if get_lb(session=session, lb_id=lb_id_udp):
+            url = RW_URL + "/config/SlbNewCfgEnhVirtServerTable/" + lb_id_udp
+            requests.delete(url, auth=session, verify=False)
+            apply_save(session=session)
+    except exceptions.Timeout as e:
+        print(e)
+    except exceptions.HTTPError as e:
+        print(e)
 
 
 def create_listener(session, lb_id, listener_id, address, port, protocol):
@@ -62,24 +85,31 @@ def create_listener(session, lb_id, listener_id, address, port, protocol):
         lb_id = lb_id + "_udp"
         if not get_lb(session=session, lb_id=lb_id):
             create_lb(session=session, lb_id=lb_id, address=address)
+    # import pdb
+    # pdb.set_trace()
     lb = get_lb_listener_list(session=session, lb_id=lb_id)
     index = 1
     if lb:
-        index = lb[len(lb) - 1].get("Index") + 1
+        for index in range(1, len(lb)+1):
+            if index != lb[index - 1].get("Index"):
+                break
+            index = index + 1
+        # index = lb[len(lb) - 1].get("Index") + 1
     create_group(session=session, listener_id=listener_id)
-    url1 = RW_URL + "/config/SlbNewCfgEnhVirtServicesTable/" + lb_id + "/" + index
+    url1 = RW_URL + "/config/SlbNewCfgEnhVirtServicesTable/" + lb_id + "/" + str(index)
     payload1 = '''
                 {
-                    "VirtPort": %s,
+                    "VirtPort": %d,
                     "RealPort": 0,
                     "DBind": 2,
                     "PBind": 3,
-                    "UDPBalance": %s
+                    "UDPBalance": %d
                 }
                 '''
-    payload1 = payload1 % port, UDPBalance
+    payload1 = payload1 % (port, UDPBalance)
     requests.post(url=url1, auth=session, data=payload1, verify=False)
-    url5 = RW_URL + "/config/SlbNewCfgEnhVirtServicesFifthPartTable/" + lb_id + "/" + index
+    apply_save(session=session)
+    url5 = RW_URL + "/config/SlbNewCfgEnhVirtServicesFifthPartTable/" + lb_id + "/" + str(index)
     ServApplicationType = 1
     if port == 443:
         ServApplicationType = 8
@@ -92,6 +122,7 @@ def create_listener(session, lb_id, listener_id, address, port, protocol):
             '''
     payload5 = payload5 % ServApplicationType
     requests.put(url=url5, auth=session, data=payload5, verify=False)
+    apply_save(session=session)
     payload7 = '''
         {
             "RealGroup": %s,
@@ -101,17 +132,31 @@ def create_listener(session, lb_id, listener_id, address, port, protocol):
             "ProxyIpMask": "255.255.255.255"
         }
         '''
-    payload7 = payload7 % listener_id, address
-    url7 = RW_URL + "/config/SlbNewCfgEnhVirtServicesSeventhPartTable/" + lb_id + "/" + index
-    requests.put(url=url7, auth=session, data=payload7, verify=False)
+    payload7 = payload7 % (listener_id, address)
+    # import pdb
+    # pdb.set_trace()
+    url7 = RW_URL + "/config/SlbNewCfgEnhVirtServicesSeventhPartTable/" + lb_id + "/" + str(index)
+    try:
+        requests.put(url=url7, auth=session, data=payload7, verify=False)
+        apply_save(session=session)
+    except exceptions.Timeout as e:
+        print(e)
+    except exceptions.HTTPError as e:
+        print(e)
 
 
 def get_lb_listener_list(session, lb_id):
     url = RW_URL + "/config/SlbNewCfgEnhVirtServicesTable/" + lb_id
-    response = requests.get(url=url, auth=session, verify=False)
-    response_dict = response.json()
-    VService = response_dict.get("SlbNewCfgEnhVirtServicesTable")
-    return VService
+    try:
+        response = requests.get(url=url, auth=session, verify=False)
+        response_dict = response.json()
+        VService = response_dict.get("SlbNewCfgEnhVirtServicesTable")
+    except exceptions.Timeout as e:
+        print(e)
+    except exceptions.HTTPError as e:
+        print(e)
+    else:
+        return VService
 
 
 def get_listener_index(session, lb_id, port):
@@ -124,18 +169,32 @@ def get_listener_index(session, lb_id, port):
 
 def get_listener(session, lb_id, port):
     index = get_listener_index(session=session, lb_id=lb_id, port=port)
-    url = RW_URL + "/config/SlbNewCfgEnhVirtServicesTable/" + lb_id + "/" + index
-    requests.get(url=url, auth=session, verify=False)
+    url = RW_URL + "/config/SlbNewCfgEnhVirtServicesTable/" + lb_id + "/" + str(index)
+    try:
+        response = requests.get(url=url, auth=session, verify=False)
+        response_dict = response.json()
+        VService = response_dict.get("SlbNewCfgEnhVirtServicesTable")
+    except exceptions.Timeout as e:
+        print(e)
+    except exceptions.HTTPError as e:
+        print(e)
+    else:
+        return VService
 
 
 def delete_listener(session, lb_id, port, listener_id, protocol):
     if protocol == "UDP":
         lb_id = lb_id + "_udp"
     index = get_listener_index(session=session, lb_id=lb_id, port=port)
-    url = RW_URL + "/config/SlbNewCfgEnhVirtServicesTable/" + lb_id + "/" + index
-    requests.delete(url=url, auth=session, verify=False)
-    delete_group(session=session, listener_id=listener_id)
-    apply_save(session=session)
+    url = RW_URL + "/config/SlbNewCfgEnhVirtServicesTable/" + lb_id + "/" + str(index)
+    try:
+        requests.delete(url=url, auth=session, verify=False)
+        delete_group(session=session, listener_id=listener_id)
+        apply_save(session=session)
+    except exceptions.Timeout as e:
+        print(e)
+    except exceptions.HTTPError as e:
+        print(e)
 
 
 def create_group(session, listener_id):
@@ -146,14 +205,24 @@ def create_group(session, listener_id):
             "HealthCheckLayer": 2
         }
         '''
-    requests.post(url=url, auth=session, data=payload, verify=False)
-    apply_save(session=session)
+    try:
+        requests.post(url=url, auth=session, data=payload, verify=False)
+        apply_save(session=session)
+    except exceptions.Timeout as e:
+        print(e)
+    except exceptions.HTTPError as e:
+        print(e)
 
 
 def delete_group(session, listener_id):
     url = RW_URL + "/config/SlbNewCfgEnhGroupTable/" + listener_id
-    requests.delete(url=url, auth=session, verify=False)
-    apply_save(session=session)
+    try:
+        requests.delete(url=url, auth=session, verify=False)
+        apply_save(session=session)
+    except exceptions.Timeout as e:
+        print(e)
+    except exceptions.HTTPError as e:
+        print(e)
 
 
 def create_member(session, member_id, ip, port, weight):
@@ -163,21 +232,31 @@ def create_member(session, member_id, ip, port, weight):
                 "IpAddr": %s,
                 "State": 2,
                 "Type": 1,
-                "Weight": %s
+                "Weight": %d
             }
             '''
-    payload = payload % ip, weight
-    requests.post(url=url, auth=session, data=payload, verify=False)
-    apply_save(session=session)
+    payload = payload % (ip, weight)
+    try:
+        requests.post(url=url, auth=session, data=payload, verify=False)
+        apply_save(session=session)
+    except exceptions.Timeout as e:
+        print(e)
+    except exceptions.HTTPError as e:
+        print(e)
     payload_port = '''
             {
-                "RealPort": %s
+                "RealPort": %d
             }
             '''
     payload_port = payload_port % port
     url_port = RW_URL + "/config/SlbNewCfgEnhRealServPortTable/" + member_id + "/1"
-    requests.post(url=url_port, auth=session, data=payload_port, verify=False)
-    apply_save(session=session)
+    try:
+        requests.post(url=url_port, auth=session, data=payload_port, verify=False)
+        apply_save(session=session)
+    except exceptions.Timeout as e:
+        print(e)
+    except exceptions.HTTPError as e:
+        print(e)
 
 
 def add_member(session, ip, port, member_id, weight, listener_id):
@@ -189,14 +268,24 @@ def add_member(session, ip, port, member_id, weight, listener_id):
                 }
                 '''
     payload = payload % member_id
-    requests.put(url=url, auth=session, data=payload, verify=False)
-    apply_save(session=session)
+    try:
+        requests.put(url=url, auth=session, data=payload, verify=False)
+        apply_save(session=session)
+    except exceptions.Timeout as e:
+        print(e)
+    except exceptions.HTTPError as e:
+        print(e)
 
 
 def delete_member(session, member_id):
     url = RW_URL + "/config/SlbNewCfgEnhRealServerTable/" + member_id
-    requests.delete(url=url, auth=session, verify=False)  # 需要保证每个member都只被唯一一个group使用
-    apply_save(session=session)
+    try:
+        requests.delete(url=url, auth=session, verify=False)  # 需要保证每个member都只被唯一一个group使用
+        apply_save(session=session)
+    except exceptions.Timeout as e:
+        print(e)
+    except exceptions.HTTPError as e:
+        print(e)
 
 
 def get_members(session, listener_id):
