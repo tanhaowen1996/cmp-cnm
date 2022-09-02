@@ -10,6 +10,7 @@ from .filters import LoadBalanceFilter, LoadBalanceListenerFilter, LoadBalanceMe
 from .citrixapi.session import NSMixin
 from .radwareapi.session import RWMixin
 from cmp_cnm.settings import OS_REGION_MAWEI
+from requests import exceptions
 import logging
 import openstack
 
@@ -154,14 +155,26 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                     for listener in LoadBalanceListener.objects.filter(lb_id=instance.id):
                         if LoadBalanceMember.objects.filter(listener_id=listener.id):
                             for member in LoadBalanceMember.objects.filter(listener_id=listener.id):
-
+                                LoadBalanceMember.delete_rw_member(rw_session=rw_conn, member_id=member.id)
                                 member.delete()
-                        listener.delete_lb_listener(ns_session=ns_conn, name=listener.name)
+                        LoadBalanceListener.delete_rw_listener(rw_session=rw_conn,
+                                                    lb_id=instance.id,
+                                                    port=listener.port,
+                                                    listener_id=listener.id,
+                                                    protocol=listener.protocol)
                         listener.delete()
-                instance.delete_nslb(ns_conn, instance.name)
-            except:
-                pass
-            return Response("this is radware")
+                LoadBalance.delete_rwlb(rw_session=rw_conn, lb_id=instance.id)
+            except exceptions.Timeout as e:
+                print(e)
+            except exceptions.HTTPError as e:
+                print(e)
+            else:
+                try:
+                    request.os_conn.network.delete_port(instance.port_id)
+                except openstack.exceptions.InvalidRequest as exc:
+                    logger.error(f"try delete openstack port {instance.port_id}: {exc}")
+                self.perform_destroy(instance)
+                return Response("删除成功", status=status.HTTP_201_CREATED)
 
 
 class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
@@ -245,6 +258,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
+        rw_conn = RWMixin.get_session()
         instance = self.get_object()
         lb = LoadBalance.objects.get(id=instance.lb_id)
         if lb.provider == "citrix":
@@ -259,7 +273,20 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                     "detail": f"{exc}"
                 }, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response("this is radware")
+            try:
+                if LoadBalanceMember.objects.filter(listener_id=instance.id):
+                    for member in LoadBalanceMember.objects.filter(listener_id=instance.id):
+                        LoadBalanceMember.delete_rw_member(rw_session=rw_conn, member_id=member.id)
+                        member.delete()
+                LoadBalanceListener.delete_rw_listener(rw_session=rw_conn,
+                                                       lb_id=instance.lb_id,
+                                                       port=instance.port,
+                                                       listener_id=instance.id,
+                                                       protocol=instance.protocol)
+            except exceptions.Timeout as e:
+                print(e)
+            except exceptions.HTTPError as e:
+                print(e)
         self.perform_destroy(instance)
         return Response("删除成功", status=status.HTTP_201_CREATED)
 
@@ -350,9 +377,16 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def add_member(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
+        rw_conn = RWMixin.get_session()
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+        serializer.save(
+            listener_id=data['listener_id'],
+            ip=data['ip'],
+            port=data['port'],
+            weight=data.get('weight', 1)
+        )
         listener = LoadBalanceListener.objects.get(id=data['listener_id'])
         lb = LoadBalance.objects.get(id=listener.lb_id)
         if lb.provider == "citrix":
@@ -371,18 +405,25 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                     "detail": f"{exc}"
                 }, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response("this is radware")
-        serializer.save(
-            listener_id=data['listener_id'],
-            ip=data['ip'],
-            port=data['port'],
-            weight=data.get('weight', 1)
-        )
+            LoadBalanceMember.add_rw_member(rw_session=rw_conn,
+                                            ip=data['ip'],
+                                            port=data['port'],
+                                            member_id=serializer.data['id'],
+                                            weight=data.get('weight', 1),
+                                            listener_id=data['listener_id'])
+            # return Response("this is radware")
+        # serializer.save(
+        #     listener_id=data['listener_id'],
+        #     ip=data['ip'],
+        #     port=data['port'],
+        #     weight=data.get('weight', 1)
+        # )
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def destroy(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
+        rw_conn = RWMixin.get_session()
         instance = self.get_object()
         listener = LoadBalanceListener.objects.get(id=instance.listener_id)
         lb = LoadBalance.objects.get(id=listener.lb_id)
@@ -397,7 +438,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                     "detail": f"{exc}"
                 }, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response("this is radware")
+            LoadBalanceMember.delete_rw_member(rw_session=rw_conn, member_id=instance.id)
         self.perform_destroy(instance)
         return Response("删除成功", status=status.HTTP_201_CREATED)
 
