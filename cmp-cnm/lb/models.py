@@ -59,6 +59,10 @@ class LoadBalance(models.Model, OpenstackMixin):
         null=True,
         max_length=128
     )
+    real_lb_identifier = models.CharField(
+        null=True,
+        max_length=64
+    )
     updated_at = models.DateTimeField(
         auto_now=True,
         verbose_name=_('updated time'))
@@ -75,6 +79,8 @@ class LoadBalance(models.Model, OpenstackMixin):
         # citrix_client.create_lb(ns_session, name, address)
 
     def delete_nslb(self, ns_session, name):
+        # import pdb
+        # pdb.set_trace()
         if citrix_client.get_lb(session=ns_session, name=name):
             citrix_client.delete_lb(ns_session, name)
         pass
@@ -141,6 +147,10 @@ class LoadBalanceListener(models.Model):
     )
     all_member = models.TextField(
         null=True
+    )
+    real_listener_identifier = models.CharField(
+        null=True,
+        max_length=64
     )
     updated_at = models.DateTimeField(
         auto_now=True,
@@ -213,6 +223,10 @@ class LoadBalanceMember(models.Model):
     weight = models.IntegerField(
         null=True
     )
+    real_member_identifier = models.CharField(
+        null=True,
+        max_length=64
+    )
     updated_at = models.DateTimeField(
         auto_now=True,
         verbose_name=_('updated time'))
@@ -244,3 +258,6 @@ class LoadBalanceMember(models.Model):
 
     def delete_rw_member(rw_session, member_id):
         radware_client.delete_member(session=rw_session, member_id=str(member_id))
+
+    def get_info_member(rw_session, member_id):
+        return radware_client.get_member_info(session=rw_session, member_id=str(member_id))
