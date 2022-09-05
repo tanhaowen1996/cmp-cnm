@@ -294,3 +294,11 @@ def get_members(session, listener_id):
     response_dict = response.json()
     VService = response_dict.get("SlbEnhGroupRealServersTable")
     return VService
+
+
+def get_member_info(session, member_id):
+    url = RW_URL + "/config/SlbEnhRealServerInfoTable/" + member_id
+    response = requests.get(url=url, auth=session, verify=False)
+    response_dict = response.json()
+    member = response_dict.get("SlbEnhRealServerInfoTable")
+    return member
