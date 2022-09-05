@@ -41,10 +41,10 @@ def get_lb(session, name):
         csvs = csvserver().get(session, name)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
-        raise exc
+        return False
     except Exception as exc:
         print("Exception::message=" + str(exc.args))
-        raise exc
+        return False
     else:
         return csvs
 
