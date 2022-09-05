@@ -16,6 +16,7 @@ class LoadBalanceSerializer(serializers.ModelSerializer):
     description = serializers.CharField(required=False)
     tenant_id = serializers.CharField(required=False)
     tenant_name = serializers.CharField(required=False)
+    real_lb_identifier = serializers.CharField(required=False)
 
     class Meta:
         model = LoadBalance
@@ -45,6 +46,7 @@ class LoadBalanceListenerSerializer(serializers.ModelSerializer):
     status = serializers.CharField(required=False)
     member_num = serializers.IntegerField(required=False)
     all_member = serializers.JSONField(required=False)
+    real_listener_identifier = serializers.CharField(required=False)
 
     class Meta:
         model = LoadBalanceListener
@@ -57,6 +59,7 @@ class LoadBalanceMemberSerializer(serializers.ModelSerializer):
     ip = serializers.CharField(required=False)
     port = serializers.IntegerField(required=False)
     weight = serializers.IntegerField(required=False)
+    real_member_identifier = serializers.CharField(required=False)
 
     class Meta:
         model = LoadBalanceMember
