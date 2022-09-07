@@ -136,7 +136,10 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                         if LoadBalanceMember.objects.filter(listener_id=listener.id):
                             for member in LoadBalanceMember.objects.filter(listener_id=listener.id):
                                 member.delete()
-                        listener.delete_lb_listener(ns_session=ns_conn, name=listener.real_listener_identifier)
+                        if "-lbvs" in listener.name:
+                            listener.delete_lb_listener(ns_session=ns_conn, name=instance.real_listener_identifier)
+                        else:
+                            listener.delete_csvs(ns_session=ns_conn, name=instance.name)
                         listener.delete()
                 instance.delete_nslb(ns_conn, instance.real_lb_identifier)
             except nitro_exception as exc:
@@ -271,7 +274,10 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 if LoadBalanceMember.objects.filter(listener_id=instance.id):
                     for member in LoadBalanceMember.objects.filter(listener_id=instance.id):
                         member.delete()
-                instance.delete_lb_listener(ns_session=ns_conn, name=instance.real_listener_identifier)
+                if "-lbvs" in instance.name:
+                    instance.delete_lb_listener(ns_session=ns_conn, name=instance.real_listener_identifier)
+                else:
+                    instance.delete_csvs(ns_session=ns_conn, name=instance.name)
             except nitro_exception as exc:
                 logger.error(f"try Delete LoadBalance Listener {instance.id} : {exc}")
                 return Response({
