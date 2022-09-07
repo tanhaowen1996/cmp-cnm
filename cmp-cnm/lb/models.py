@@ -177,10 +177,10 @@ class LoadBalanceListener(models.Model):
                                          lbmethod)
 
     def delete_lb_listener(self, ns_session, name):
-        if "lbvs" in name or "_" in name:
-            citrix_client.delete_lb_listener(ns_session, name)
-        else:
-            citrix_client.delete_lb_listener_csvs(ns_session, name)
+        citrix_client.delete_lb_listener(ns_session, name)
+
+    def delete_csvs(self, ns_session, name):
+        citrix_client.delete_lb_listener_csvs(ns_session, name)
 
     def get_status(ns_session, name):
         listener = citrix_client.get_lbvs(session=ns_session, name=name)
