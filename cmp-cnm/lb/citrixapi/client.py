@@ -9,12 +9,26 @@ from nssrc.com.citrix.netscaler.nitro.resource.config.basic.server import server
 from nssrc.com.citrix.netscaler.nitro.resource.config.network.vlan import vlan
 from nssrc.com.citrix.netscaler.nitro.resource.config.network.vlan_interface_binding import vlan_interface_binding
 from nssrc.com.citrix.netscaler.nitro.resource.config.ns.nsip import nsip
+from nssrc.com.citrix.netscaler.nitro.resource.config.ns.nsconfig import nsconfig
+
+
+def citrix_save(session):
+    try:
+        action = nsconfig()
+        action.perform_operation(session, action="save")
+    except nitro_exception as exc:
+        print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
+        raise exc
+    except Exception as exc:
+        print("Exception::message=" + str(exc.args))
+        raise exc
 
 
 def delete_lb(session, name):
     try:
         csvs_list = csvserver()
         csvs_list.delete(session, name)
+        citrix_save(session=session)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
@@ -61,6 +75,7 @@ def create_lb_listener(session, name, address, port, protocol, lbmethod):
         lb_listener.port = port
         lb_listener.lbmethod = lbmethod
         lbvserver.add(session, lb_listener)
+        citrix_save(session=session)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
@@ -73,6 +88,7 @@ def delete_lb_listener(session, name):
     try:
         lb_listener = lbvserver()
         lb_listener.delete(session, name)
+        citrix_save(session=session)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
@@ -86,6 +102,7 @@ def delete_lb_listener_csvs(session, name):
         lb_listener = csvserver()
         lb_listener.delete(session, name)
         delete_lb_ture_policy(session, name)
+        citrix_save(session=session)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
@@ -98,6 +115,7 @@ def delete_lb_ture_policy(session, name):
     try:
         cspolicy.delete(session, name)
         delete_lb_action(session, name)
+        citrix_save(session=session)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
@@ -111,6 +129,7 @@ def delete_lb_action(session, name):
         lb_action = csaction()
         lb_action.delete(session, name)
         delete_lb_vs(session, name)
+        citrix_save(session=session)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
@@ -124,6 +143,7 @@ def delete_lb_vs(session, name):
         lb_vserver = lbvserver()
         lb_name = name + "-lbvs"
         lb_vserver.delete(session, lb_name)
+        citrix_save(session=session)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
@@ -181,6 +201,7 @@ def add_lb_member(session, address, port, weight, protocol, vs_name):
         lb_member.weight = weight
         lb_member.name = vs_name
         lbvserver_service_binding.add(session, lb_member)
+        citrix_save(session=session)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
@@ -195,6 +216,7 @@ def delete_lb_member(session, name, member_name):
         lb_member.name = name
         lb_member.servicename = member_name
         lbvserver_service_binding.delete(session, lb_member)
+        citrix_save(session=session)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
@@ -254,6 +276,7 @@ def create_lb_member(session, address, port, protocol):
         lb_member.port = port
         lb_member.servicetype = protocol_lb
         lb_member.add(session, lb_member)
+        citrix_save(session=session)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
@@ -274,6 +297,7 @@ def create_vlan(session, vlan_id, vlan_name):
         vlan_bindings.tagged = True
         vlan_bindings.ifnum = "LA/1"
         vlan_interface_binding.add(session, vlan_bindings)
+        citrix_save(session=session)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
@@ -289,6 +313,7 @@ def add_snip(session, ip, netmask):
         new_ip.ipaddress = ip
         new_ip.netmask = netmask
         nsip.add(session, new_ip)
+        citrix_save(session=session)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)
         raise exc
