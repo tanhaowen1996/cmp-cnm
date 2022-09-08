@@ -61,6 +61,7 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    'cmp_cnm.soloveCrossDomain.SoloveCrossDomainMiddleware',
     'cmp_cnm.middleware.HealthCheckMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -211,11 +212,11 @@ LOGGING = {
 
 OS_PROJECT_DOMAIN_NAME = os.getenv('OS_PROJECT_DOMAIN_NAME', 'Default')
 OS_USER_DOMAIN_NAME = os.getenv('OS_USER_DOMAIN_NAME', 'Default')
-OS_PROJECT_NAME = os.getenv('OS_PROJECT_NAME', '')
-OS_TENANT_NAME = os.getenv('OS_TENANT_NAME', '')
-OS_USERNAME = os.getenv('OS_USERNAME', '')
-OS_PASSWORD = os.getenv('OS_PASSWORD', '')
-OS_AUTH_URL = os.getenv('OS_AUTH_URL', '')
+OS_PROJECT_NAME = os.getenv('OS_PROJECT_NAME', 'admin')
+OS_TENANT_NAME = os.getenv('OS_TENANT_NAME', 'admin')
+OS_USERNAME = os.getenv('OS_USERNAME', 'admin')
+OS_PASSWORD = os.getenv('OS_PASSWORD', 'NY4E6Tz6SfuKBztPppBik1GXTqY7m3M3FDpsL2nK')
+OS_AUTH_URL = os.getenv('OS_AUTH_URL', 'http://10.209.0.10:35357/v3')
 OS_INTERFACE = os.getenv('OS_INTERFACE', 'internal')
 OS_ENDPOINT_TYPE = os.getenv('OS_ENDPOINT_TYPE', 'internalURL')
 OS_IDENTITY_API_VERSION = int(os.getenv('OS_IDENTITY_API_VERSION', '3'))
