@@ -137,7 +137,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                             for member in LoadBalanceMember.objects.filter(listener_id=listener.id):
                                 member.delete()
                         if "-lbvs" in listener.name:
-                            listener.delete_lb_listener(ns_session=ns_conn, name=instance.real_listener_identifier)
+                            listener.delete_lb_listener(ns_session=ns_conn, name=listener.real_listener_identifier)
                         else:
                             listener.delete_csvs(ns_session=ns_conn, name=instance.name)
                         listener.delete()
