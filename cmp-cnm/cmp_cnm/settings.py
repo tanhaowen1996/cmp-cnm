@@ -224,7 +224,7 @@ OS_REGION_NAME = os.getenv('OS_REGION_NAME', 'test')
 OS_AUTH_PLUGIN = os.getenv('OS_AUTH_PLUGIN', 'password')
 OS_REGION_MAWEI = os.getenv('OS_REGION_MAWEI', 'test')
 
-OS_TOKEN_KEY = os.getenv('OPENSTACK_TOKEN_KEY', 'Os-Token')
+OS_TOKEN_KEY = os.getenv('OPENSTACK_TOKEN_KEY', 'x-auth-token')
 
 NS_HOST = os.getenv('NS_HOST', '10.209.0.65')
 NS_PROTOCOL = os.getenv('NS_PROTOCOL', 'http')
