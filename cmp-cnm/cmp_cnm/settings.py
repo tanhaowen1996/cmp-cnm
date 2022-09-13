@@ -162,49 +162,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{asctime}|{levelname}|{process:d}-{thread:d}|{filename}#{lineno}|{module}:{funcName}|{message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {asctime} {created} {message}',
-            'style': '{',
-        }
-    },
-    'filters': {
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'propagate': True,
-        },
-        'django.request': {
-            'handlers': ['console'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
-        'cmp_cnm': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
-        }
-    }
-}
-
 OS_PROJECT_DOMAIN_NAME = os.getenv('OS_PROJECT_DOMAIN_NAME', 'Default')
 OS_USER_DOMAIN_NAME = os.getenv('OS_USER_DOMAIN_NAME', 'Default')
 OS_PROJECT_NAME = os.getenv('OS_PROJECT_NAME', 'admin')
@@ -263,16 +220,12 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'stream': open(os.path.join(LOG_DIR, 'cmp-cnm-api.log'), 'a'),
-            'maxBytes': 1024 * 1024 * 10,
-            'backupCount': 5,
             'formatter': 'standard'
         },
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
             'filename': os.path.join(LOG_DIR, 'cmp-cnm.log'),
-            'maxBytes': 1024 * 1024 * 10,
-            'backupCount': 5,
             'formatter': 'standard'
         },
         'default': {
@@ -295,10 +248,11 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': True,
         },
-        'django.db.backends': {
+        'cmp_cnm': {
             'handlers': ['file'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': True,
         },
     },
 }
+
