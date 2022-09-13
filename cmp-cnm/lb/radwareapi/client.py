@@ -25,7 +25,6 @@ def create_lb(session, lb_id, address):
     payload = payload % address
     try:
         requests.post(url, auth=session, data=payload, verify=False)
-        apply_save(session=session)
     except exceptions.Timeout as e:
         print(e)
     except exceptions.HTTPError as e:
@@ -66,12 +65,10 @@ def delete_lb(session, lb_id):
     url = RW_URL + "/config/SlbNewCfgEnhVirtServerTable/" + lb_id
     try:
         requests.delete(url, auth=session, verify=False)
-        apply_save(session=session)
         lb_id_udp = lb_id + "_udp"
         if get_lb(session=session, lb_id=lb_id_udp):
             url = RW_URL + "/config/SlbNewCfgEnhVirtServerTable/" + lb_id_udp
             requests.delete(url, auth=session, verify=False)
-            apply_save(session=session)
     except exceptions.Timeout as e:
         print(e)
     except exceptions.HTTPError as e:
@@ -85,8 +82,6 @@ def create_listener(session, lb_id, listener_id, address, port, protocol):
         lb_id = lb_id + "_udp"
         if not get_lb(session=session, lb_id=lb_id):
             create_lb(session=session, lb_id=lb_id, address=address)
-    # import pdb
-    # pdb.set_trace()
     lb = get_lb_listener_list(session=session, lb_id=lb_id)
     index = 1
     if lb:
@@ -108,7 +103,6 @@ def create_listener(session, lb_id, listener_id, address, port, protocol):
                 '''
     payload1 = payload1 % (port, UDPBalance)
     requests.post(url=url1, auth=session, data=payload1, verify=False)
-    apply_save(session=session)
     url5 = RW_URL + "/config/SlbNewCfgEnhVirtServicesFifthPartTable/" + lb_id + "/" + str(index)
     ServApplicationType = 1
     if port == 443:
@@ -122,7 +116,6 @@ def create_listener(session, lb_id, listener_id, address, port, protocol):
             '''
     payload5 = payload5 % ServApplicationType
     requests.put(url=url5, auth=session, data=payload5, verify=False)
-    apply_save(session=session)
     payload7 = '''
         {
             "RealGroup": %s,
@@ -138,7 +131,6 @@ def create_listener(session, lb_id, listener_id, address, port, protocol):
     url7 = RW_URL + "/config/SlbNewCfgEnhVirtServicesSeventhPartTable/" + lb_id + "/" + str(index)
     try:
         requests.put(url=url7, auth=session, data=payload7, verify=False)
-        apply_save(session=session)
     except exceptions.Timeout as e:
         print(e)
     except exceptions.HTTPError as e:
@@ -190,7 +182,6 @@ def delete_listener(session, lb_id, port, listener_id, protocol):
     try:
         requests.delete(url=url, auth=session, verify=False)
         delete_group(session=session, listener_id=listener_id)
-        apply_save(session=session)
     except exceptions.Timeout as e:
         print(e)
     except exceptions.HTTPError as e:
@@ -207,7 +198,6 @@ def create_group(session, listener_id):
         '''
     try:
         requests.post(url=url, auth=session, data=payload, verify=False)
-        apply_save(session=session)
     except exceptions.Timeout as e:
         print(e)
     except exceptions.HTTPError as e:
@@ -218,7 +208,6 @@ def delete_group(session, listener_id):
     url = RW_URL + "/config/SlbNewCfgEnhGroupTable/" + listener_id
     try:
         requests.delete(url=url, auth=session, verify=False)
-        apply_save(session=session)
     except exceptions.Timeout as e:
         print(e)
     except exceptions.HTTPError as e:
@@ -238,7 +227,6 @@ def create_member(session, member_id, ip, port, weight):
     payload = payload % (ip, weight)
     try:
         requests.post(url=url, auth=session, data=payload, verify=False)
-        apply_save(session=session)
     except exceptions.Timeout as e:
         print(e)
     except exceptions.HTTPError as e:
@@ -252,7 +240,6 @@ def create_member(session, member_id, ip, port, weight):
     url_port = RW_URL + "/config/SlbNewCfgEnhRealServPortTable/" + member_id + "/1"
     try:
         requests.post(url=url_port, auth=session, data=payload_port, verify=False)
-        apply_save(session=session)
     except exceptions.Timeout as e:
         print(e)
     except exceptions.HTTPError as e:
@@ -270,7 +257,6 @@ def add_member(session, ip, port, member_id, weight, listener_id):
     payload = payload % member_id
     try:
         requests.put(url=url, auth=session, data=payload, verify=False)
-        apply_save(session=session)
     except exceptions.Timeout as e:
         print(e)
     except exceptions.HTTPError as e:
@@ -281,7 +267,6 @@ def delete_member(session, member_id):
     url = RW_URL + "/config/SlbNewCfgEnhRealServerTable/" + member_id
     try:
         requests.delete(url=url, auth=session, verify=False)  # 需要保证每个member都只被唯一一个group使用
-        apply_save(session=session)
     except exceptions.Timeout as e:
         print(e)
     except exceptions.HTTPError as e:
