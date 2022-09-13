@@ -8,7 +8,9 @@ from .serializers import LoadBalanceSerializer, LoadBalanceListenerSerializer, \
 from .models import LoadBalance, LoadBalanceListener, LoadBalanceMember
 from .filters import LoadBalanceFilter, LoadBalanceListenerFilter, LoadBalanceMemberFilter
 from .citrixapi.session import NSMixin
+from .citrixapi.client import citrix_save
 from .radwareapi.session import RWMixin
+from .radwareapi.client import apply_save
 from cmp_cnm.settings import OS_REGION_MAWEI
 from requests import exceptions
 import logging
@@ -108,11 +110,13 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         else:
             LoadBalance.create_rwlb(rw_session=rw_conn, lb_id=serializer.data['id'], address=ipaddress)
             real_lb_identifier = str(serializer.data['id'])
+            apply_save(session=rw_conn)
         lb = LoadBalance.objects.get(id=serializer.data['id'])
         lb.ip = ipaddress
         lb.status = "up"
         lb.port_id = port_id
         lb.provider = provider
+        lb.subnet_id = subnet_id
         lb.real_lb_identifier = real_lb_identifier
         lb.save()
         headers = self.get_success_headers(serializer.data)
@@ -142,6 +146,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                             listener.delete_csvs(ns_session=ns_conn, name=instance.name)
                         listener.delete()
                 instance.delete_nslb(ns_conn, instance.real_lb_identifier)
+                citrix_save(session=ns_conn)
             except nitro_exception as exc:
                 logger.error(f"try Delete LoadBalance {instance.name} : {exc}")
                 return Response({
@@ -169,6 +174,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                                                     protocol=listener.protocol)
                         listener.delete()
                 LoadBalance.delete_rwlb(rw_session=rw_conn, lb_id=instance.real_lb_identifier)
+                apply_save(session=rw_conn)
             except exceptions.Timeout as e:
                 print(e)
             except exceptions.HTTPError as e:
@@ -234,6 +240,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                                                        port=data['port'],
                                                        protocol=data['protocol'],
                                                        lbmethod=data.get('algorithm', 'ROUNDROBIN'))
+                citrix_save(session=ns_conn)
             except nitro_exception as exc:
                 logger.error(f"try creating LoadBalance Listener {data['name']} : {exc}")
                 return Response({
@@ -249,6 +256,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                                                       port=data['port'],
                                                       protocol=data['protocol']
                                                       )
+            apply_save(session=rw_conn)
         lb_listener = LoadBalanceListener.objects.get(id=serializer.data['id'])
         lb_listener.name = lb_listener_name
         lb_listener.status = "0.00%"
@@ -278,6 +286,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                     instance.delete_lb_listener(ns_session=ns_conn, name=instance.real_listener_identifier)
                 else:
                     instance.delete_csvs(ns_session=ns_conn, name=instance.name)
+                citrix_save(session=ns_conn)
             except nitro_exception as exc:
                 logger.error(f"try Delete LoadBalance Listener {instance.id} : {exc}")
                 return Response({
@@ -295,6 +304,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                                                        port=instance.port,
                                                        listener_id=instance.real_listener_identifier,
                                                        protocol=instance.protocol)
+                apply_save(session=rw_conn)
             except exceptions.Timeout as e:
                 print(e)
             except exceptions.HTTPError as e:
@@ -439,6 +449,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                                              protocol=protocol,
                                              vs_name=lbvs_name)
                 real_member_identifier = data['ip'] + ":" + str(data['port']) + "-" + protocol
+                citrix_save(session=ns_conn)
             except nitro_exception as exc:
                 logger.error(f"try add LoadBalance member v4 : {exc}")
                 return Response({
@@ -452,6 +463,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                                             weight=data.get('weight', 1),
                                             listener_id=data['listener_id'])
             real_member_identifier = serializer.data['id']
+            apply_save(session=rw_conn)
 
         lb_member = LoadBalanceMember.objects.get(id=serializer.data['id'])
         lb_member.real_member_identifier = real_member_identifier
@@ -470,6 +482,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 lbvs_name = listener.real_listener_identifier
                 member_name = instance.real_member_identifier
                 instance.delete_lb_member(ns_conn, lbvs_name=lbvs_name, member_name=member_name)
+                citrix_save(session=ns_conn)
             except nitro_exception as exc:
                 logger.error(f"try Delete LoadBalance {instance.id} : {exc}")
                 return Response({
@@ -477,6 +490,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 }, status=status.HTTP_400_BAD_REQUEST)
         else:
             LoadBalanceMember.delete_rw_member(rw_session=rw_conn, member_id=instance.real_member_identifier)
+            apply_save(session=rw_conn)
         self.perform_destroy(instance)
         return Response("删除成功", status=status.HTTP_201_CREATED)
 
