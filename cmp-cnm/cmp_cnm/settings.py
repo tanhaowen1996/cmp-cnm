@@ -16,7 +16,6 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
@@ -75,7 +74,6 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'cmp_cnm.urls'
 HEALTH_CHECK_PATH = os.getenv('HEALTH_CHECK_PATH', '/health')
 
-
 URL = os.getenv("URL", "127.0.0.1:8080")
 WEB_PORT = os.getenv("WEB_PORT", 8080)
 
@@ -100,7 +98,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'cmp_cnm.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
@@ -110,12 +107,13 @@ DATABASES = {
         'NAME': os.getenv('DB_NAME', 'cmp_cnm'),
         'USER': os.getenv('DB_USER', 'cmp_cnm'),
         'PASSWORD': os.getenv('DB_PASSWORD', 'cmp_cnm'),
+        # 'PASSWORD': os.getenv('DB_PASSWORD', '4da5fe522058ca244f93257c452f9e9ce27482ab'),
+        # 'HOST': os.getenv('DB_HOST', '10.208.0.46'),
         'HOST': os.getenv('DB_HOST', '10.208.224.79'),
         'PORT': int(os.getenv('DB_PORT', 5432)),
         'CONN_MAX_AGE': 3
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -135,7 +133,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
@@ -152,7 +149,6 @@ USE_TZ = True
 DATETIME_FORMAT = 'Y-m-d H:i:s'
 
 DATE_FORMAT = 'Y-m-d'
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
@@ -209,7 +205,6 @@ LOGGING = {
     }
 }
 
-
 OS_PROJECT_DOMAIN_NAME = os.getenv('OS_PROJECT_DOMAIN_NAME', 'Default')
 OS_USER_DOMAIN_NAME = os.getenv('OS_USER_DOMAIN_NAME', 'Default')
 OS_PROJECT_NAME = os.getenv('OS_PROJECT_NAME', 'admin')
@@ -249,3 +244,61 @@ if SWAGGER:
             }
         },
     }
+
+from logs.log_path import LOG_DIR
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'standard': {
+            'format': '[%(asctime)s] [%(levelname)s] %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'stream': open(os.path.join(LOG_DIR, 'cmp-cnm-api.log'), 'a'),
+            'maxBytes': 1024 * 1024 * 10,
+            'backupCount': 5,
+            'formatter': 'standard'
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'cmp-cnm.log'),
+            'maxBytes': 1024 * 1024 * 10,
+            'backupCount': 5,
+            'formatter': 'standard'
+        },
+        'default': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'all.log'),
+            'maxBytes': 1024 * 1024 * 10,
+            'backupCount': 5,
+            'formatter': 'standard',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'django.request ': {
+            'handlers': ['console', 'file'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+        'django.db.backends': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
