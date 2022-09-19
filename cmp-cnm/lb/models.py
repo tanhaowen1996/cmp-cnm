@@ -254,7 +254,11 @@ class LoadBalanceMember(models.Model):
         citrix_client.update_lb_member(ns_session, lbvs_name, member_name, ip, port, weight, protocol)
 
     def add_rw_member(rw_session, ip, port, member_id, listener_id, weight=1):
-        radware_client.add_member(session=rw_session, ip=ip, port=port, member_id=str(member_id), weight=weight, listener_id=str(listener_id))
+        radware_client.add_member(session=rw_session,
+                                  ip=ip, port=port,
+                                  member_id=str(member_id),
+                                  weight=weight,
+                                  listener_id=str(listener_id))
 
     def delete_rw_member(rw_session, member_id):
         radware_client.delete_member(session=rw_session, member_id=str(member_id))
