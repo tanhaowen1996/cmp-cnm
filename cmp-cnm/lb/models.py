@@ -265,3 +265,11 @@ class LoadBalanceMember(models.Model):
 
     def get_info_member(rw_session, member_id):
         return radware_client.get_member_info(session=rw_session, member_id=str(member_id))
+
+    def get_ns_members(ns_session, name):
+        members = citrix_client.lb_vs_member_list(session=ns_session, lb_vs_name=name)
+        return members
+
+    def get_rw_members(rw_session, listener_id):
+        members = radware_client.lb_member_list(session=rw_session, listener_id=str(listener_id))
+        return members
