@@ -648,3 +648,38 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         else:
             self.perform_update(serializer)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['get'])
+    def sync_member(self, request, *args, **kwargs):
+        ns_conn = NSMixin.get_session()
+        rw_conn = RWMixin.get_session()
+        listeners = LoadBalanceListener.objects.all()
+        for listener in listeners:
+            members = LoadBalanceMember.objects.filter(listener_id=listener.id)
+            members.delete()
+            lb = LoadBalance.objects.get(id=listener.lb_id)
+            if lb.provider == "citrix":
+                ns_members = LoadBalanceMember.get_ns_members(ns_session=ns_conn, name=listener.real_listener_identifier)
+                if ns_members:
+                    for ns_member in ns_members:
+                        LoadBalanceMember.objects.create(
+                            listener_id=listener.id,
+                            ip=ns_member.ipv46,
+                            port=ns_member.port,
+                            weight=int(ns_member.weight),
+                            real_member_identifier=ns_member.servicename
+                        )
+            else:
+                rw_members = LoadBalanceMember.get_rw_members(rw_session=rw_conn, listener_id=listener.real_listener_identifier)
+                if rw_members:
+                    for rw_member in rw_members:
+                        real_member = LoadBalanceMember.get_info_member(rw_session=rw_conn, member_id=rw_member.RealServGroupIndex)
+                        LoadBalanceMember.objects.create(
+                            listener_id=listener.id,
+                            ip=real_member[0].get("IpAddr"),
+                            port=real_member[0].get("SwitchPort"),
+                            weight=1,
+                            real_member_identifier=rw_member.RealServGroupIndex,
+                        )
+        return Response("同步成功", status=status.HTTP_201_CREATED)
+
