@@ -85,7 +85,7 @@ def create_listener(session, lb_id, listener_id, address, port, protocol):
     lb = get_lb_listener_list(session=session, lb_id=lb_id)
     index = 1
     if lb:
-        for index in range(1, len(lb)+1):
+        for index in range(1, len(lb) + 1):
             if index != lb[index - 1].get("Index"):
                 break
             index = index + 1
@@ -287,3 +287,11 @@ def get_member_info(session, member_id):
     response_dict = response.json()
     member = response_dict.get("SlbEnhRealServerInfoTable")
     return member
+
+
+def lb_member_list(session, listener_id):
+    url = RW_URL + "/config/SlbNewCfgEnhGroupRealServerTable/" + listener_id
+    member_r = requests.get(url, auth=session, verify=False)
+    response_dict_member = member_r.json()
+    members = response_dict_member.get("SlbNewCfgEnhGroupRealServerTable")
+    return members
