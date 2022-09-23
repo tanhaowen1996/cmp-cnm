@@ -431,11 +431,6 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         return serializer
 
     def list(self, request, *args, **kwargs):
-        # serializer = self.get_serializer(data=request.data)
-        # serializer.is_valid(raise_exception=True)
-        # data = serializer.validated_data
-        # import pdb
-        # pdb.set_trace()
         ns_conn = NSMixin.get_session()
         rw_conn = RWMixin.get_session()
         qs = super().get_queryset()
@@ -447,6 +442,8 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         lb = LoadBalance.objects.get(id=request.GET.get('lb_id', request.data.get('lb_id')))
         if lb.provider == "citrix":
             for listener in serializer.data:
+                if not listener.get('real_listener_identifier'):
+                    continue
                 ns_listener, ns_members = LoadBalanceListener.get_status(ns_session=ns_conn,
                                                                          name=listener.get('real_listener_identifier'))
                 if int(ns_listener.totalservices):
@@ -472,6 +469,8 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 all = 0
                 all_member = []
                 for member in members:
+                    if not listener.get('real_listener_identifier'):
+                        continue
                     real_member = LoadBalanceMember.get_info_member(rw_session=rw_conn,
                                                                     member_id=member.real_member_identifier)
                     all = all + 1
