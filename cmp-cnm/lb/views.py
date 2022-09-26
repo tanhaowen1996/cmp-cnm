@@ -308,6 +308,11 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             data = serializer.validated_data
             lb = LoadBalance.objects.get(id=data['lb_id'])
+            listener_name = lb.ip + ":" + str(data['port']) + "-" + data['protocol']
+            if LoadBalanceListener.objects.filter(name=listener_name):
+                return Response({
+                    "detail": f"该监听已存在"
+                }, status=status.HTTP_400_BAD_REQUEST)
             serializer.save(
                 lb_id=data['lb_id'],
                 protocol=data['protocol'],
