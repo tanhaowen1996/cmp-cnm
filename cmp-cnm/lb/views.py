@@ -696,7 +696,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         else:
             qs = qs.filter(listener_id=request.GET.get('listener_id', request.data.get('listener_id')))
         serializer = self.list_page(qs)
-        return self.get_paginated_response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
