@@ -522,6 +522,8 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             serializer = self.list_page(qs)
         else:
             for listener in serializer.data:
+                if not listener.get('real_listener_identifier'):
+                    continue
                 members = LoadBalanceMember.objects.filter(listener_id=listener.get("id"))
                 state_up = 0
                 all = 0
