@@ -145,7 +145,7 @@ class LoadBalanceListener(models.Model):
     member_num = models.IntegerField(
         null=True
     )
-    all_member = models.TextField(
+    all_member = models.JSONField(
         null=True
     )
     real_listener_identifier = models.CharField(
