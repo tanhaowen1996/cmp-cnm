@@ -68,19 +68,26 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         # ns_conn = NSMixin.get_session()
-        rw_conn = RWMixin.get_session()
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data
-        serializer.save(
-            name=data['name'],
-            net_type=data.get('net_type', 'public'),
-            status="create",
-            tenant_id=request.tenant.get("id"),
-            tenant_name=request.tenant.get('name'),
-            description=data.get('description', None),
-            network_id=data.get('network_id', None)
-        )
+        try:
+            rw_conn = RWMixin.get_session()
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            data = serializer.validated_data
+            serializer.save(
+                name=data['name'],
+                net_type=data.get('net_type', 'public'),
+                status="create",
+                tenant_id=request.tenant.get("id"),
+                tenant_name=request.tenant.get('name'),
+                description=data.get('description', None),
+                network_id=data.get('network_id', None)
+            )
+        except Exception as e:
+            logger.error(f"try creating loadbance ERROR: {e}")
+            return Response({
+                "detail": f"{e}"
+
+            }, status=status.HTTP_400_BAD_REQUEST)
         if request.tenant.get("region_name") == OS_REGION_MAWEI:
             provider = "citrix"
         else:
@@ -108,9 +115,16 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             real_lb_identifier = data['name']
             # LoadBalance.create_lb(ns_session=ns_conn, name=data['name'], address=ipaddress)
         else:
-            LoadBalance.create_rwlb(rw_session=rw_conn, lb_id=serializer.data['id'], address=ipaddress)
-            real_lb_identifier = str(serializer.data['id'])
-            apply_save(session=rw_conn)
+            try:
+                LoadBalance.create_rwlb(rw_session=rw_conn, lb_id=serializer.data['id'], address=ipaddress)
+                real_lb_identifier = str(serializer.data['id'])
+                apply_save(session=rw_conn)
+            except Exception as e:
+                logger.error(f"try creating loadbance ERROR: {e}")
+                return Response({
+                    "detail": f"{e}"
+
+                }, status=status.HTTP_400_BAD_REQUEST)
         lb = LoadBalance.objects.get(id=serializer.data['id'])
         lb.ip = ipaddress
         lb.status = "up"
@@ -131,36 +145,52 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
 
     def delete_citrix_lb(self, lb_id):
         ns_conn = NSMixin.get_session()
-        lb = LoadBalance.objects.get(id=lb_id)
-        if LoadBalanceListener.objects.filter(lb_id=lb_id):
-            for listener in LoadBalanceListener.objects.filter(lb_id=lb_id):
-                if LoadBalanceMember.objects.filter(listener_id=listener.id):
-                    for member in LoadBalanceMember.objects.filter(listener_id=listener.id):
-                        member.delete()
-                if "-lbvs" in listener.name:
-                    listener.delete_lb_listener(ns_session=ns_conn, name=listener.real_listener_identifier)
-                else:
-                    listener.delete_csvs(ns_session=ns_conn, name=lb.name)
-                listener.delete()
-        lb.delete_nslb(ns_conn, lb.real_lb_identifier)
+        try:
+            lb = LoadBalance.objects.get(id=lb_id)
+            if LoadBalanceListener.objects.filter(lb_id=lb_id):
+                for listener in LoadBalanceListener.objects.filter(lb_id=lb_id):
+                    if LoadBalanceMember.objects.filter(listener_id=listener.id):
+                        for member in LoadBalanceMember.objects.filter(listener_id=listener.id):
+                            member.delete()
+                    if "-lbvs" in listener.name:
+                        listener.delete_lb_listener(ns_session=ns_conn, name=listener.real_listener_identifier)
+                    else:
+                        listener.delete_csvs(ns_session=ns_conn, name=lb.name)
+                    listener.delete()
+        except Exception as e:
+            logger.error(f"try delete loadbance ERROR: {e}")
+            return Response({
+                "detail": f"{e}"
+
+            }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            lb.delete_nslb(ns_conn, lb.real_lb_identifier)
 
     def delete_radware_lb(self, lb_id):
         rw_conn = RWMixin.get_session()
-        lb = LoadBalance.objects.get(id=lb_id)
-        if LoadBalanceListener.objects.filter(lb_id=lb_id):
-            for listener in LoadBalanceListener.objects.filter(lb_id=lb_id):
-                if LoadBalanceMember.objects.filter(listener_id=listener.id):
-                    for member in LoadBalanceMember.objects.filter(listener_id=listener.id):
-                        LoadBalanceMember.delete_rw_member(rw_session=rw_conn,
-                                                           member_id=member.real_member_identifier)
-                        member.delete()
-                LoadBalanceListener.delete_rw_listener(rw_session=rw_conn,
-                                                       lb_id=lb.real_lb_identifier,
-                                                       port=listener.port,
-                                                       listener_id=listener.real_listener_identifier,
-                                                       protocol=listener.protocol)
-                listener.delete()
-        LoadBalance.delete_rwlb(rw_session=rw_conn, lb_id=lb.real_lb_identifier)
+        try:
+            lb = LoadBalance.objects.get(id=lb_id)
+            if LoadBalanceListener.objects.filter(lb_id=lb_id):
+                for listener in LoadBalanceListener.objects.filter(lb_id=lb_id):
+                    if LoadBalanceMember.objects.filter(listener_id=listener.id):
+                        for member in LoadBalanceMember.objects.filter(listener_id=listener.id):
+                            LoadBalanceMember.delete_rw_member(rw_session=rw_conn,
+                                                               member_id=member.real_member_identifier)
+                            member.delete()
+                    LoadBalanceListener.delete_rw_listener(rw_session=rw_conn,
+                                                           lb_id=lb.real_lb_identifier,
+                                                           port=listener.port,
+                                                           listener_id=listener.real_listener_identifier,
+                                                           protocol=listener.protocol)
+                    listener.delete()
+        except Exception as e:
+            logger.error(f"try delete loadbance ERROR: {e}")
+            return Response({
+                "detail": f"{e}"
+
+            }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            LoadBalance.delete_rwlb(rw_session=rw_conn, lb_id=lb.real_lb_identifier)
 
     def destroy(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
@@ -273,18 +303,25 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
         rw_conn = RWMixin.get_session()
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data
-        lb = LoadBalance.objects.get(id=data['lb_id'])
-        serializer.save(
-            lb_id=data['lb_id'],
-            protocol=data['protocol'],
-            port=data['port'],
-            type="4层",
-            algorithm=data.get('algorithm', 'ROUNDROBIN'),
-            status="creat"
-        )
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            data = serializer.validated_data
+            lb = LoadBalance.objects.get(id=data['lb_id'])
+            serializer.save(
+                lb_id=data['lb_id'],
+                protocol=data['protocol'],
+                port=data['port'],
+                type="4层",
+                algorithm=data.get('algorithm', 'ROUNDROBIN'),
+                status="creat"
+            )
+        except Exception as e:
+            logger.error(f"try serializer ERROR: {e}")
+            return Response({
+                "detail": f"{e}"
+
+            }, status=status.HTTP_400_BAD_REQUEST)
         if lb.provider == "citrix":
             try:
                 lb_listener_name = lb.ip + ":" + str(data['port']) + "-" + data['protocol'] + "-lbvs"
@@ -298,32 +335,53 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 citrix_save(session=ns_conn)
             except nitro_exception as exc:
                 logger.error(f"try creating LoadBalance Listener {data['name']} : {exc}")
+                lb_listener = LoadBalanceListener.objects.get(id=serializer.data['id'])
+                lb_listener.status = "ERROR"
+                lb_listener.save()
                 return Response({
                     "detail": f"{exc}"
                 }, status=status.HTTP_400_BAD_REQUEST)
         else:
-            lb_listener_name = lb.ip + ":" + str(data['port']) + "-" + data['protocol']
-            real_listener_identifier = str(serializer.data['id'])
-            LoadBalanceListener.create_rd_lb_listener(rw_session=rw_conn,
-                                                      lb_id=lb.id,
-                                                      listener_id=serializer.data['id'],
-                                                      address=lb.ip,
-                                                      port=data['port'],
-                                                      protocol=data['protocol']
-                                                      )
-            apply_save(session=rw_conn)
-        lb_listener = LoadBalanceListener.objects.get(id=serializer.data['id'])
-        lb_listener.name = lb_listener_name
-        lb_listener.status = "0.00%"
-        lb_listener.real_listener_identifier = real_listener_identifier
-        lb_listener.save()
-        serializer.data['name'] = lb_listener_name
-        serializer.data['status'] = "0.00%"
-        lb_listener = lb_listener.__dict__
-        lb_listener["member_num"] = 0
-        lb_listener["all_member"] = 0
-        serializer = self.get_serializer(data=lb_listener)
-        serializer.is_valid(raise_exception=True)
+            try:
+                lb_listener_name = lb.ip + ":" + str(data['port']) + "-" + data['protocol']
+                real_listener_identifier = str(serializer.data['id'])
+                LoadBalanceListener.create_rd_lb_listener(rw_session=rw_conn,
+                                                          lb_id=lb.id,
+                                                          listener_id=serializer.data['id'],
+                                                          address=lb.ip,
+                                                          port=data['port'],
+                                                          protocol=data['protocol']
+                                                          )
+                apply_save(session=rw_conn)
+            except Exception as e:
+                logger.error(f"try creating LoadBalance Listener {data['name']} : {e}")
+                lb_listener = LoadBalanceListener.objects.get(id=serializer.data['id'])
+                lb_listener.status = "ERROR"
+                lb_listener.save()
+                return Response({
+                    "detail": f"{e}"
+                }, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            lb_listener = LoadBalanceListener.objects.get(id=serializer.data['id'])
+            lb_listener.name = lb_listener_name
+            lb_listener.status = "0.00%"
+            lb_listener.real_listener_identifier = real_listener_identifier
+            lb_listener.save()
+            serializer.data['name'] = lb_listener_name
+            serializer.data['status'] = "0.00%"
+            lb_listener = lb_listener.__dict__
+            lb_listener["member_num"] = 0
+            lb_listener["all_member"] = 0
+            serializer = self.get_serializer(data=lb_listener)
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            logger.error(f"try update {data['name']} LoadBalance Listener database ERROR : {e}")
+            lb_listener = LoadBalanceListener.objects.get(id=serializer.data['id'])
+            lb_listener.status = "DATE ERROR"
+            lb_listener.save()
+            return Response({
+                "detail": f"{e}"
+            }, status=status.HTTP_400_BAD_REQUEST)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
@@ -492,8 +550,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                     status=stat
                 )
                 serializer = self.list_page(qs)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return self.get_paginated_response(serializer.data)
 
 
 class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
@@ -535,15 +592,22 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     def add_member(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
         rw_conn = RWMixin.get_session()
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        data = serializer.validated_data
-        serializer.save(
-            listener_id=data['listener_id'],
-            ip=data['ip'],
-            port=data['port'],
-            weight=data.get('weight', 1)
-        )
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            data = serializer.validated_data
+            serializer.save(
+                listener_id=data['listener_id'],
+                ip=data['ip'],
+                port=data['port'],
+                weight=data.get('weight', 1)
+            )
+        except Exception as e:
+            logger.error(f"try serializer ERROR: {e}")
+            return Response({
+                "detail": f"{e}"
+
+            }, status=status.HTTP_400_BAD_REQUEST)
         listener = LoadBalanceListener.objects.get(id=data['listener_id'])
         lb = LoadBalance.objects.get(id=listener.lb_id)
         if lb.provider == "citrix":
@@ -564,14 +628,20 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                     "detail": f"{exc}"
                 }, status=status.HTTP_400_BAD_REQUEST)
         else:
-            LoadBalanceMember.add_rw_member(rw_session=rw_conn,
-                                            ip=data['ip'],
-                                            port=data['port'],
-                                            member_id=serializer.data['id'],
-                                            weight=data.get('weight', 1),
-                                            listener_id=data['listener_id'])
-            real_member_identifier = serializer.data['id']
-            apply_save(session=rw_conn)
+            try:
+                LoadBalanceMember.add_rw_member(rw_session=rw_conn,
+                                                ip=data['ip'],
+                                                port=data['port'],
+                                                member_id=serializer.data['id'],
+                                                weight=data.get('weight', 1),
+                                                listener_id=data['listener_id'])
+                real_member_identifier = serializer.data['id']
+                apply_save(session=rw_conn)
+            except Exception as e:
+                logger.error(f"try add LoadBalance member ERROR : {e}")
+                return Response({
+                    "detail": f"{e}"
+                }, status=status.HTTP_400_BAD_REQUEST)
 
         lb_member = LoadBalanceMember.objects.get(id=serializer.data['id'])
         lb_member.real_member_identifier = real_member_identifier
@@ -597,8 +667,14 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                     "detail": f"{exc}"
                 }, status=status.HTTP_400_BAD_REQUEST)
         else:
-            LoadBalanceMember.delete_rw_member(rw_session=rw_conn, member_id=instance.real_member_identifier)
-            apply_save(session=rw_conn)
+            try:
+                LoadBalanceMember.delete_rw_member(rw_session=rw_conn, member_id=instance.real_member_identifier)
+                apply_save(session=rw_conn)
+            except Exception as e:
+                logger.error(f"try Delete LoadBalance {instance.id} : {e}")
+                return Response({
+                    "detail": f"{e}"
+                }, status=status.HTTP_400_BAD_REQUEST)
         self.perform_destroy(instance)
         return Response("删除成功", status=status.HTTP_201_CREATED)
 
@@ -620,7 +696,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         else:
             qs = qs.filter(listener_id=request.GET.get('listener_id', request.data.get('listener_id')))
         serializer = self.list_page(qs)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return self.get_paginated_response(serializer.data)
 
     def update(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()

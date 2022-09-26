@@ -1,7 +1,7 @@
 django<3.3
 django-filter
 django-netfields
-djangorestframework
+djangorestframework<3.14
 drf_yasg
 gunicorn
 httptools
