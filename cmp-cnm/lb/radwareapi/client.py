@@ -106,23 +106,16 @@ def create_listener(session, lb_id, listener_id, address, port, protocol):
     url5 = RW_URL + "/config/SlbNewCfgEnhVirtServicesFifthPartTable/" + lb_id + "/" + str(index)
     ServApplicationType = 1
     if port == 443:
-        ServApplicationType = 7
-        url6 = RW_URL + "/config/SlbNewCfgEnhVirtServicesSixthPartTable/" + lb_id + "/" + str(index)
-        payload6 = '''
-                        {
-                            "XForwardedFor": 1
-                        }
-                        '''
-        requests.put(url=url6, auth=session, data=payload6, verify=False)
+        ServApplicationType = 8
     if port == 80:
         ServApplicationType = 6
-        url6 = RW_URL + "/config/SlbNewCfgEnhVirtServicesSixthPartTable/" + lb_id + "/" + str(index)
-        payload6 = '''
+        url1 = RW_URL + "/config/SlbNewCfgEnhVirtServicesTable/" + lb_id + "/" + str(index)
+        payload1 = '''
                     {
-                        "XForwardedFor": 1
+                        "NonHTTP": 1
                     }
                     '''
-        requests.put(url=url6, auth=session, data=payload6, verify=False)
+        requests.put(url=url1, auth=session, data=payload1, verify=False)
     payload5 = '''
             {
                 "ServApplicationType": %s
