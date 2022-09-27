@@ -630,6 +630,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 citrix_save(session=ns_conn)
             except nitro_exception as exc:
                 logger.error(f"try add LoadBalance member v4 : {exc}")
+                LoadBalanceMember.objects.get(id=serializer.data['id']).delete()
                 return Response({
                     "detail": f"{exc}"
                 }, status=status.HTTP_400_BAD_REQUEST)
@@ -645,6 +646,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 apply_save(session=rw_conn)
             except Exception as e:
                 logger.error(f"try add LoadBalance member ERROR : {e}")
+                LoadBalanceMember.objects.get(id=serializer.data['id']).delete()
                 return Response({
                     "detail": f"{e}"
                 }, status=status.HTTP_400_BAD_REQUEST)
