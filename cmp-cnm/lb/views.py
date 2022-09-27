@@ -308,8 +308,9 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             data = serializer.validated_data
             lb = LoadBalance.objects.get(id=data['lb_id'])
-            listener_name = lb.ip + ":" + str(data['port']) + "-" + data['protocol']
-            if LoadBalanceListener.objects.filter(name=listener_name):
+            lb_listener_name = lb.ip + ":" + str(data['port']) + "-" + data['protocol'] + "-lbvs"
+            if LoadBalanceListener.objects.filter(name=lb_listener_name) or \
+                    LoadBalanceListener.objects.filter(real_listener_identifier=lb_listener_name):
                 return Response({
                     "detail": f"该监听已存在"
                 }, status=status.HTTP_400_BAD_REQUEST)
@@ -319,17 +320,16 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 port=data['port'],
                 type="4层",
                 algorithm=data.get('algorithm', 'ROUNDROBIN'),
-                status="creat"
+                status="creat",
+                name=lb_listener_name,
             )
         except Exception as e:
             logger.error(f"try serializer ERROR: {e}")
             return Response({
                 "detail": f"{e}"
-
             }, status=status.HTTP_400_BAD_REQUEST)
         if lb.provider == "citrix":
             try:
-                lb_listener_name = lb.ip + ":" + str(data['port']) + "-" + data['protocol'] + "-lbvs"
                 real_listener_identifier = lb_listener_name
                 LoadBalanceListener.create_lb_listener(ns_session=ns_conn,
                                                        name=lb_listener_name,
@@ -338,7 +338,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                                                        protocol=data['protocol'],
                                                        lbmethod=data.get('algorithm', 'ROUNDROBIN'))
                 citrix_save(session=ns_conn)
-            except nitro_exception as exc:
+            except Exception as exc:
                 logger.error(f"try creating LoadBalance Listener {data['name']} : {exc}")
                 lb_listener = LoadBalanceListener.objects.get(id=serializer.data['id'])
                 lb_listener.status = "ERROR"
@@ -348,7 +348,6 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 }, status=status.HTTP_400_BAD_REQUEST)
         else:
             try:
-                lb_listener_name = lb.ip + ":" + str(data['port']) + "-" + data['protocol']
                 real_listener_identifier = str(serializer.data['id'])
                 LoadBalanceListener.create_rd_lb_listener(rw_session=rw_conn,
                                                           lb_id=lb.id,
@@ -736,32 +735,42 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         ns_conn = NSMixin.get_session()
         rw_conn = RWMixin.get_session()
         listeners = LoadBalanceListener.objects.all()
-        for listener in listeners:
-            members = LoadBalanceMember.objects.filter(listener_id=listener.id)
-            members.delete()
-            lb = LoadBalance.objects.get(id=listener.lb_id)
-            if lb.provider == "citrix":
-                ns_members = LoadBalanceMember.get_ns_members(ns_session=ns_conn, name=listener.real_listener_identifier)
-                if ns_members:
-                    for ns_member in ns_members:
-                        LoadBalanceMember.objects.create(
-                            listener_id=listener.id,
-                            ip=ns_member.ipv46,
-                            port=ns_member.port,
-                            weight=int(ns_member.weight),
-                            real_member_identifier=ns_member.servicename
-                        )
-            else:
-                rw_members = LoadBalanceMember.get_rw_members(rw_session=rw_conn, listener_id=listener.real_listener_identifier)
-                if rw_members:
-                    for rw_member in rw_members:
-                        real_member = LoadBalanceMember.get_info_member(rw_session=rw_conn, member_id=rw_member.RealServGroupIndex)
-                        LoadBalanceMember.objects.create(
-                            listener_id=listener.id,
-                            ip=real_member[0].get("IpAddr"),
-                            port=real_member[0].get("SwitchPort"),
-                            weight=1,
-                            real_member_identifier=rw_member.RealServGroupIndex,
-                        )
+        try:
+            for listener in listeners:
+                members = LoadBalanceMember.objects.filter(listener_id=listener.id)
+                members.delete()
+                lb = LoadBalance.objects.get(id=listener.lb_id)
+                if lb.provider == "citrix":
+                    ns_members = LoadBalanceMember.get_ns_members(ns_session=ns_conn,
+                                                                  name=listener.real_listener_identifier)
+                    if ns_members:
+                        for ns_member in ns_members:
+                            LoadBalanceMember.objects.create(
+                                listener_id=listener.id,
+                                ip=ns_member.ipv46,
+                                port=ns_member.port,
+                                weight=int(ns_member.weight),
+                                real_member_identifier=ns_member.servicename
+                            )
+                else:
+                    rw_members = LoadBalanceMember.get_rw_members(rw_session=rw_conn,
+                                                                  listener_id=listener.real_listener_identifier)
+                    if rw_members:
+                        for rw_member in rw_members:
+                            real_member = LoadBalanceMember.get_info_member(rw_session=rw_conn,
+                                                                            member_id=rw_member.get("ServIndex"))
+                            LoadBalanceMember.objects.create(
+                                listener_id=listener.id,
+                                ip=real_member[0].get("IpAddr"),
+                                port=real_member[0].get("SwitchPort"),
+                                weight=1,
+                                real_member_identifier=rw_member.get("ServIndex"),
+                            )
+        except Exception as e:
+            logger.error(f"同步失败: {e} {listener}")
+            return Response({
+                "detail": f"{e}"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         return Response("同步成功", status=status.HTTP_201_CREATED)
 
