@@ -346,6 +346,11 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                     "detail": f"{exc}"
                 }, status=status.HTTP_400_BAD_REQUEST)
         else:
+            if LoadBalanceListener.objects.filter(lb_id=data['lb_id'], port=data['port']):
+                LoadBalanceListener.objects.get(id=serializer.data['id']).delete()
+                return Response({
+                    "detail": f"已存在{lb.ip}-{data['port']}"
+                }, status=status.HTTP_400_BAD_REQUEST)
             try:
                 real_listener_identifier = str(serializer.data['id'])
                 LoadBalanceListener.create_rd_lb_listener(rw_session=rw_conn,
