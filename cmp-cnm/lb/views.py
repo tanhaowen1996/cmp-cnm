@@ -309,10 +309,9 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             data = serializer.validated_data
             lb = LoadBalance.objects.get(id=data['lb_id'])
             lb_listener_name = lb.ip + ":" + str(data['port']) + "-" + data['protocol'] + "-lbvs"
-            if LoadBalanceListener.objects.filter(name=lb_listener_name) or \
-                    LoadBalanceListener.objects.filter(real_listener_identifier=lb_listener_name):
+            if LoadBalanceListener.objects.filter(lb_id=data['lb_id'], protocol=data['protocol'], port=data['port']):
                 return Response({
-                    "detail": f"该监听已存在"
+                    "detail": f"已存在{lb.ip}-{data['protocol']}"
                 }, status=status.HTTP_400_BAD_REQUEST)
             serializer.save(
                 lb_id=data['lb_id'],
@@ -602,6 +601,12 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             data = serializer.validated_data
+            member_list = LoadBalanceMember.objects.filter(listener_id=data['listener_id'])
+            if member_list.filter(ip=data['ip'], port=data['port']):
+                return Response({
+                    "detail": f"已存在成员{data['ip']}端口{data['port']}"
+                }, status=status.HTTP_400_BAD_REQUEST)
+
             serializer.save(
                 listener_id=data['listener_id'],
                 ip=data['ip'],
