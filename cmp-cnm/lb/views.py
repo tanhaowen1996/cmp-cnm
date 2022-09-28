@@ -502,59 +502,67 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         serializer = self.list_page(qs)
         lb = LoadBalance.objects.get(id=request.GET.get('lb_id', request.data.get('lb_id')))
         if lb.provider == "citrix":
-            for listener in serializer.data:
-                if not listener.get('real_listener_identifier'):
-                    continue
-                ns_listener, ns_members = LoadBalanceListener.get_status(ns_session=ns_conn,
-                                                                         name=listener.get('real_listener_identifier'))
-                if int(ns_listener.totalservices):
-                    stat = format(float(format(float
-                                               (ns_listener.activeservices) / float(ns_listener.totalservices), '.4f')
-                                        ) * 100, '.2f') + "%"
-                else:
-                    stat = "0.00%"
-                all_member = []
-                for ns_member in ns_members:
-                    mem = {'name': ns_member.servicename, 'status': ns_member.curstate}
-                    all_member.append(mem)
-                LoadBalanceListener.objects.filter(id=listener.get('id')).update(
-                    all_member=all_member,
-                    member_num=int(ns_listener.totalservices),
-                    status=stat
-                )
-            serializer = self.list_page(qs)
-        else:
-            for listener in serializer.data:
-                if not listener.get('real_listener_identifier'):
-                    continue
-                members = LoadBalanceMember.objects.filter(listener_id=listener.get("id"))
-                state_up = 0
-                all = 0
-                all_member = []
-                for member in members:
+            try:
+                for listener in serializer.data:
                     if not listener.get('real_listener_identifier'):
                         continue
-                    real_member = LoadBalanceMember.get_info_member(rw_session=rw_conn,
-                                                                    member_id=member.real_member_identifier)
-                    all = all + 1
-                    if real_member[0].get("State") == 2:
-                        state_up = state_up + 1
-                        mem = {'name': real_member[0].get("IpAddr"), 'status': "UP"}
+                    ns_listener, ns_members = LoadBalanceListener.get_status(ns_session=ns_conn,
+                                                                             name=listener.get(
+                                                                                 'real_listener_identifier'))
+                    if int(ns_listener.totalservices):
+                        stat = format(float(format(float
+                                                   (ns_listener.activeservices) / float(ns_listener.totalservices),
+                                                   '.4f')
+                                            ) * 100, '.2f') + "%"
                     else:
-                        mem = {'name': real_member[0].get("IpAddr"), 'status': "DOWN"}
-                    all_member.append(mem)
-                if all == 0:
-                    stat = "0.00%"
-                else:
-                    stat = format(float(format(float
-                                               (state_up) / float(all), '.4f')
-                                        ) * 100, '.2f') + "%"
-                LoadBalanceListener.objects.filter(id=listener.get('id')).update(
-                    all_member=all_member,
-                    member_num=all,
-                    status=stat
-                )
+                        stat = "0.00%"
+                    all_member = []
+                    for ns_member in ns_members:
+                        mem = {'name': ns_member.servicename, 'status': ns_member.curstate}
+                        all_member.append(mem)
+                    LoadBalanceListener.objects.filter(id=listener.get('id')).update(
+                        all_member=all_member,
+                        member_num=int(ns_listener.totalservices),
+                        status=stat
+                    )
                 serializer = self.list_page(qs)
+            except Exception as e:
+                logger.error(f"获取Listener错误：{e}")
+        else:
+            try:
+                for listener in serializer.data:
+                    if not listener.get('real_listener_identifier'):
+                        continue
+                    members = LoadBalanceMember.objects.filter(listener_id=listener.get("id"))
+                    state_up = 0
+                    all = 0
+                    all_member = []
+                    for member in members:
+                        if not listener.get('real_listener_identifier'):
+                            continue
+                        real_member = LoadBalanceMember.get_info_member(rw_session=rw_conn,
+                                                                        member_id=member.real_member_identifier)
+                        all = all + 1
+                        if real_member[0].get("State") == 2:
+                            state_up = state_up + 1
+                            mem = {'name': real_member[0].get("IpAddr"), 'status': "UP"}
+                        else:
+                            mem = {'name': real_member[0].get("IpAddr"), 'status': "DOWN"}
+                        all_member.append(mem)
+                    if all == 0:
+                        stat = "0.00%"
+                    else:
+                        stat = format(float(format(float
+                                                   (state_up) / float(all), '.4f')
+                                            ) * 100, '.2f') + "%"
+                    LoadBalanceListener.objects.filter(id=listener.get('id')).update(
+                        all_member=all_member,
+                        member_num=all,
+                        status=stat
+                    )
+                    serializer = self.list_page(qs)
+            except Exception as e:
+                logger.error(f"获取Listener错误：{e}")
         return self.get_paginated_response(serializer.data)
 
 
