@@ -615,6 +615,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             )
         except Exception as e:
             logger.error(f"try serializer ERROR: {e}")
+            LoadBalanceMember.objects.get(id=serializer.data['id']).delete()
             return Response({
                 "detail": f"{e}"
 
@@ -633,7 +634,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                                              vs_name=lbvs_name)
                 real_member_identifier = data['ip'] + ":" + str(data['port']) + "-" + protocol
                 citrix_save(session=ns_conn)
-            except nitro_exception as exc:
+            except Exception as exc:
                 logger.error(f"try add LoadBalance member v4 : {exc}")
                 LoadBalanceMember.objects.get(id=serializer.data['id']).delete()
                 return Response({
@@ -668,6 +669,9 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         instance = self.get_object()
         listener = LoadBalanceListener.objects.get(id=instance.listener_id)
         lb = LoadBalance.objects.get(id=listener.lb_id)
+        if not instance.real_member_identifier:
+            self.perform_destroy(instance)
+            return Response("删除成功", status=status.HTTP_201_CREATED)
         if lb.provider == "citrix":
             try:
                 lbvs_name = listener.real_listener_identifier
