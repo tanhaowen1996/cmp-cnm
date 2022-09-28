@@ -560,7 +560,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                         member_num=all,
                         status=stat
                     )
-                    serializer = self.list_page(qs)
+                serializer = self.list_page(qs)
             except Exception as e:
                 logger.error(f"获取Listener错误：{e}")
         return self.get_paginated_response(serializer.data)
