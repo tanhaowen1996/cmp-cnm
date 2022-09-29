@@ -311,8 +311,13 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             lb_listener_name = lb.ip + ":" + str(data['port']) + "-" + data['protocol'] + "-lbvs"
             if LoadBalanceListener.objects.filter(lb_id=data['lb_id'], protocol=data['protocol'], port=data['port']):
                 return Response({
-                    "detail": f"已存在{lb.ip}-{data['protocol']}"
+                    "detail": f"已存在{lb.ip}协议：{data['protocol']}端口：{data['port']}"
                 }, status=status.HTTP_400_BAD_REQUEST)
+            if lb.provider != "citrix":
+                if LoadBalanceListener.objects.filter(lb_id=data['lb_id'], port=data['port']):
+                    return Response({
+                        "detail": f"已存在{lb.ip}端口：{data['port']}"
+                    }, status=status.HTTP_400_BAD_REQUEST)
             serializer.save(
                 lb_id=data['lb_id'],
                 protocol=data['protocol'],
@@ -346,11 +351,6 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                     "detail": f"{exc}"
                 }, status=status.HTTP_400_BAD_REQUEST)
         else:
-            if LoadBalanceListener.objects.filter(lb_id=data['lb_id'], port=data['port']):
-                LoadBalanceListener.objects.get(id=serializer.data['id']).delete()
-                return Response({
-                    "detail": f"已存在{lb.ip}-{data['port']}"
-                }, status=status.HTTP_400_BAD_REQUEST)
             try:
                 real_listener_identifier = str(serializer.data['id'])
                 LoadBalanceListener.create_rd_lb_listener(rw_session=rw_conn,
