@@ -598,6 +598,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     filterset_class = LoadBalanceMemberFilter
     serializer_class = LoadBalanceMemberSerializer
     queryset = LoadBalanceMember.objects.all()
+    pagination_class = None
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -783,10 +784,12 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                         for rw_member in rw_members:
                             real_member = LoadBalanceMember.get_info_member(rw_session=rw_conn,
                                                                             member_id=rw_member.get("ServIndex"))
+                            real_member_prot = LoadBalanceMember.get_rw_member(rw_session=rw_conn,
+                                                                               member_id=rw_member.get("ServIndex"))
                             LoadBalanceMember.objects.create(
                                 listener_id=listener.id,
                                 ip=real_member[0].get("IpAddr"),
-                                port=real_member[0].get("SwitchPort"),
+                                port=real_member_prot[0].get("SwitchPort"),
                                 weight=1,
                                 real_member_identifier=rw_member.get("ServIndex"),
                             )

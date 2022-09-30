@@ -302,3 +302,12 @@ def lb_member_list(session, listener_id):
     response_dict_member = member_r.json()
     members = response_dict_member.get("SlbNewCfgEnhGroupRealServerTable")
     return members
+
+
+def get_member(session, member_id):
+    url = RW_URL + "/config/SlbNewCfgEnhRealServPortTable/" + member_id
+    response = requests.get(url=url, auth=session, verify=False)
+    response_dict = response.json()
+    member = response_dict.get("SlbNewCfgEnhRealServPortTable")
+    return member
+
