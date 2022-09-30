@@ -789,7 +789,7 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                             LoadBalanceMember.objects.create(
                                 listener_id=listener.id,
                                 ip=real_member[0].get("IpAddr"),
-                                port=real_member_prot[0].get("SwitchPort"),
+                                port=real_member_prot[0].get("RealPort"),
                                 weight=1,
                                 real_member_identifier=rw_member.get("ServIndex"),
                             )
