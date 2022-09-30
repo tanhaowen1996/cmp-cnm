@@ -54,7 +54,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     filterset_class = LoadBalanceFilter
     serializer_class = LoadBalanceSerializer
     update_serializer_class = UpdateLoadBalanceSerializer
-    queryset = LoadBalance.objects.all()
+    queryset = LoadBalance.objects.all().order_by('-created_at')
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -298,7 +298,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     authentication_classes = (OSAuthentication,)
     filterset_class = LoadBalanceListenerFilter
     serializer_class = LoadBalanceListenerSerializer
-    queryset = LoadBalanceListener.objects.all()
+    queryset = LoadBalanceListener.objects.all().order_by('-created_at')
 
     def create(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
