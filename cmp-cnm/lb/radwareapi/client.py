@@ -109,13 +109,13 @@ def create_listener(session, lb_id, listener_id, address, port, protocol):
         ServApplicationType = 8
     if port == 80:
         ServApplicationType = 6
-        url1 = RW_URL + "/config/SlbNewCfgEnhVirtServicesTable/" + lb_id + "/" + str(index)
-        payload1 = '''
-                    {
-                        "NonHTTP": 1
-                    }
-                    '''
-        requests.put(url=url1, auth=session, data=payload1, verify=False)
+        # url1 = RW_URL + "/config/SlbNewCfgEnhVirtServicesTable/" + lb_id + "/" + str(index)
+        # payload1 = '''
+        #             {
+        #                 "NonHTTP": 1
+        #             }
+        #             '''
+        # requests.put(url=url1, auth=session, data=payload1, verify=False)
     payload5 = '''
             {
                 "ServApplicationType": %s
