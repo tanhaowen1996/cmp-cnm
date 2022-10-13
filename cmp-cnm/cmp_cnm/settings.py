@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'lb.citrixapi',
     'lb.radwareapi',
     'rest_framework',
+    'django_apscheduler',
 ]
 
 REST_FRAMEWORK = {
@@ -107,8 +108,6 @@ DATABASES = {
         'NAME': os.getenv('DB_NAME', 'cmp_cnm'),
         'USER': os.getenv('DB_USER', 'cmp_cnm'),
         'PASSWORD': os.getenv('DB_PASSWORD', 'cmp_cnm'),
-        # 'PASSWORD': os.getenv('DB_PASSWORD', '4da5fe522058ca244f93257c452f9e9ce27482ab'),
-        # 'HOST': os.getenv('DB_HOST', '10.208.0.46'),
         'HOST': os.getenv('DB_HOST', '10.208.224.79'),
         'PORT': int(os.getenv('DB_PORT', 5432)),
         'CONN_MAX_AGE': 3
@@ -187,6 +186,8 @@ HTTP_FILE = os.getenv('HTTP_FILE', '10.208.0.49:8080')
 RW_URL = os.getenv('RW_URL', 'https://10.209.0.61')
 RW_USER = os.getenv('RW_USER', 'admin')
 RW_PASSWD = os.getenv('RW_PASSWD', 'radware')
+
+WEBHOOK_URL = os.getenv('WEBHOOK_URL', 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=84889afd-ea6a-49fb-b922-72cc10e99629')
 
 SWAGGER = bool(int(os.getenv('SWAGGER', 0)))
 
