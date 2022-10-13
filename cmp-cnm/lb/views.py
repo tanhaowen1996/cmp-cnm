@@ -15,6 +15,7 @@ from cmp_cnm.settings import OS_REGION_MAWEI
 from requests import exceptions
 import logging
 import openstack
+from .sync.SyncLoadBalanceMember import scheduler
 
 logger = logging.getLogger(__package__)
 
@@ -533,6 +534,9 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 serializer = self.list_page(qs)
             except Exception as e:
                 logger.error(f"获取Listener错误：{e}")
+                return Response({
+                    "detail": f"{e}"
+                }, status=status.HTTP_400_BAD_REQUEST)
         else:
             try:
                 for listener in serializer.data:
@@ -568,6 +572,9 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 serializer = self.list_page(qs)
             except Exception as e:
                 logger.error(f"获取Listener错误：{e}")
+                return Response({
+                    "detail": f"{e}"
+                }, status=status.HTTP_400_BAD_REQUEST)
         return self.get_paginated_response(serializer.data)
 
 
