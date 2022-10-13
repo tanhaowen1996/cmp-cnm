@@ -108,7 +108,6 @@ class LoadBalance(models.Model, OpenstackMixin):
         radware_client.delete_lb(session=rw_session, lb_id=str(lb_id))
 
 
-
 class LoadBalanceListener(models.Model):
     id = models.UUIDField(
         primary_key=True,
