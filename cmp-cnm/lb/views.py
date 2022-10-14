@@ -57,6 +57,9 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     update_serializer_class = UpdateLoadBalanceSerializer
     queryset = LoadBalance.objects.all().order_by('-created_at')
 
+    def get_serializer_class(self):
+        return LoadBalanceSerializer
+
     def get_queryset(self):
         qs = super().get_queryset()
         if self.request.headers.get("Region") == OS_REGION_MAWEI:
@@ -64,7 +67,7 @@ class LoadBalanceViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
         else:
             qs = qs.filter(provider="radware")
         if not self.request.user.is_staff:
-            qs = qs.filter(tenant_id=self.request.tenant.get("id"))
+            qs = qs.filter(tenant_id=self.request.headers.get("ProjectId"))
         return qs
 
     def create(self, request, *args, **kwargs):
@@ -300,6 +303,9 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     filterset_class = LoadBalanceListenerFilter
     serializer_class = LoadBalanceListenerSerializer
     queryset = LoadBalanceListener.objects.all().order_by('-created_at')
+
+    def get_serializer_class(self):
+        return LoadBalanceListenerSerializer
 
     def create(self, request, *args, **kwargs):
         ns_conn = NSMixin.get_session()
@@ -606,6 +612,9 @@ class LoadBalanceMemberViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
     serializer_class = LoadBalanceMemberSerializer
     queryset = LoadBalanceMember.objects.all()
     pagination_class = None
+
+    def get_serializer_class(self):
+        return LoadBalanceMemberSerializer
 
     def get_queryset(self):
         qs = super().get_queryset()
