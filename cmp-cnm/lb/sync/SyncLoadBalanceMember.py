@@ -14,6 +14,7 @@ def CheckLoadBalanceMember():
     rw_conn = RWMixin.get_session()
     listeners = LoadBalanceListener.objects.all()
     try:
+        listener_list = []
         for listener in listeners:
             lb = LoadBalance.objects.get(id=listener.lb_id)
             db_member = []
@@ -35,15 +36,17 @@ def CheckLoadBalanceMember():
                 db_member.append(member.real_member_identifier)
 
             if set(db_member).difference(set(real_member)) or set(real_member).difference(set(db_member)):
-                print('数据不一致 %s' % listener.id)
-                webhook_url = WEBHOOK_URL
-                data = {
-                    "msgtype": "markdown",
-                    "markdown": {"content": "负载均衡设备数据与数据库数据不一致，请及时同步"}
-                }
-                r = requests.post(url=webhook_url, data=json.dumps(data, ensure_ascii=False).encode('utf-8'),
-                                  verify=False)
-                return
+                listener_list.append(listener.real_listener_identifier)
+        if listener_list:
+            webhook_url = WEBHOOK_URL
+            content = """负载均衡设备数据与数据库数据不一致，请及时同步
+不一致监听列表：{}""".format(listener_list)
+            data = {
+                "msgtype": "markdown",
+                "markdown": {"content": content}
+            }
+            requests.post(url=webhook_url, data=json.dumps(data, ensure_ascii=False).encode('utf-8'),
+                          verify=False)
     except Exception as e:
         print(e)
 
@@ -53,4 +56,3 @@ scheduler = BackgroundScheduler()
 scheduler.add_job(CheckLoadBalanceMember, 'cron', month='*', day='*', hour=23, minute=59, second=00)
 
 scheduler.start()
-
