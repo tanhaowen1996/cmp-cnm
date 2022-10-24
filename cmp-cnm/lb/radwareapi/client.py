@@ -7,10 +7,28 @@ from cmp_cnm.settings import RW_URL
 urllib3.disable_warnings(InsecureRequestWarning)
 
 
+def check_apply(session):
+    check_url = RW_URL + "/monitor?prop=agApplyPending"
+    apply_or_not = requests.get(url=check_url, auth=session, verify=False)
+    response_dict = apply_or_not.json()
+    apply_or_not = response_dict.get("agApplyPending")
+    return apply_or_not
+
+
 def apply_save(session):
+    if check_apply(session=session) == 3:
+        return
     apply_url = RW_URL + "/config?action=apply"
     save_url = RW_URL + "/config?action=save"
     requests.post(url=apply_url, auth=session, verify=False)
+    apply_state_url = RW_URL + "/config?prop=agApplyConfig"
+    apply_state = requests.get(url=apply_state_url, auth=session, verify=False)
+    response_dict = apply_state.json()
+    apply_state = response_dict.get("agApplyConfig")
+    if apply_state == 5:
+        apply_err_url = RW_URL + "/config/AgApplyTable"
+        apply_err = requests.get(url=apply_err_url, auth=session, verify=False).json().get("StringVal")
+        raise Exception(apply_err)
     requests.post(url=save_url, auth=session, verify=False)
 
 
