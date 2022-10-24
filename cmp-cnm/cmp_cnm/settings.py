@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     'lb.radwareapi',
     'rest_framework',
     'django_apscheduler',
+    'route',
+    'firewall',
 ]
 
 REST_FRAMEWORK = {
@@ -188,6 +190,11 @@ RW_USER = os.getenv('RW_USER', 'admin')
 RW_PASSWD = os.getenv('RW_PASSWD', 'radware')
 
 WEBHOOK_URL = os.getenv('WEBHOOK_URL', 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=84889afd-ea6a-49fb-b922-72cc10e99629')
+
+H3C_HOST = os.getenv('H3C_HOST', '10.209.255.2')
+H3C_PORT = os.getenv('H3C_PORT', 830)
+H3C_USER = os.getenv('H3C_USER', 'fzyh_mawei')
+H3C_PASSWORD = os.getenv('H3C_PASSWORD', 'fzyh_mawei_yh601933')
 
 SWAGGER = bool(int(os.getenv('SWAGGER', 0)))
 

@@ -12,6 +12,7 @@ uvicorn
 uvloop
 openstacksdk
 django-apscheduler
+ncclient
 
 oslo.config>=6.0.0 # Apache-2.0
 oslo.messaging>=8.0.0 # Apache-2.0

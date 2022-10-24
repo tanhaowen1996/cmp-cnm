@@ -23,12 +23,17 @@ from lb.views import LoadBalanceViewSet, \
                      LoadBalanceMemberViewSet
 from cmp_cnm.settings import MEDIA_ROOT
 from django.views.static import serve
+from firewall.views import FirewallViewSet
+from route.views import StaticRouteViewSet
 
 
 router = SimpleRouter(trailing_slash=False)
 router.register(r'lb', LoadBalanceViewSet, basename='load_balance')
 router.register(r'lb_listener', LoadBalanceListenerViewSet, basename='load_balance_listener')
 router.register(r'lb_member', LoadBalanceMemberViewSet, basename='load_balance_member')
+
+router.register(r'route', StaticRouteViewSet, basename='route')
+router.register(r'firewall', FirewallViewSet, basename='firewall')
 
 urlpatterns = [
     path('v2/', include(router.urls)),
