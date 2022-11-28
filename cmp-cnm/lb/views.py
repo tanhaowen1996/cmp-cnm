@@ -545,6 +545,7 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                 }, status=status.HTTP_400_BAD_REQUEST)
         else:
             try:
+                apply_save(session=rw_conn)
                 for listener in serializer.data:
                     if not listener.get('real_listener_identifier'):
                         continue
