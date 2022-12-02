@@ -38,10 +38,10 @@ class StaticRoute(StaticRoutingNetConfMixin, models.Model):
         max_length=30,
         verbose_name=_('tenant name')
     )
-    creater = models.CharField(
-        blank=True,
-        max_length=100,
-        verbose_name=_('creater'))
+    # creater = models.CharField(
+    #     blank=True,
+    #     max_length=100,
+    #     verbose_name=_('creater'))
     created = models.DateTimeField(
         blank=True,
         auto_now_add=True,

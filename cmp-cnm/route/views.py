@@ -39,7 +39,7 @@ class StaticRouteViewSet(mixins.CreateModelMixin,
                 ip_next_hop_address=request.data['ip_next_hop_address'],
                 cluster_code=request.data['cluster_code'],
                 tenant_id=request.tenant.get("id"),
-                tenant_name=request.tenant.get("name"),
+                tenant_name=request.tenant.get('name'),
             )
             destination_subnet = request.data['destination_subnet'],
             ip_next_hop_address = request.data['ip_next_hop_address'],
