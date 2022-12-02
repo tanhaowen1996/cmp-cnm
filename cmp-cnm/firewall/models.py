@@ -14,31 +14,31 @@ class Firewall(FirewallNetConfMixin, models.Model):
         max_length=100,
         verbose_name=_('name')
     )
-    source_tenant_id = models.CharField(
-        blank=True,
-        max_length=100,
-        verbose_name=_('source_tenant_id')
-    )
-    source_tenant_name = models.CharField(
-        blank=True,
-        max_length=100,
-        verbose_name=_('source_tenant_name')
-    )
+    # source_tenant_id = models.CharField(
+    #     blank=True,
+    #     max_length=100,
+    #     verbose_name=_('source_tenant_id')
+    # )
+    # source_tenant_name = models.CharField(
+    #     blank=True,
+    #     max_length=100,
+    #     verbose_name=_('source_tenant_name')
+    # )
     source_network = models.CharField(
         blank=True,
         max_length=100,
         verbose_name=_('source_network')
     )
-    destination_tenant_id = models.CharField(
-        blank=True,
-        max_length=100,
-        verbose_name=_('destination_tenant_id')
-    )
-    destination_tenant_name = models.CharField(
-        blank=True,
-        max_length=100,
-        verbose_name=_('destination_tenant_name')
-    )
+    # destination_tenant_id = models.CharField(
+    #     blank=True,
+    #     max_length=100,
+    #     verbose_name=_('destination_tenant_id')
+    # )
+    # destination_tenant_name = models.CharField(
+    #     blank=True,
+    #     max_length=100,
+    #     verbose_name=_('destination_tenant_name')
+    # )
     destination_network = models.CharField(
         blank=True,
         max_length=100,
@@ -59,10 +59,10 @@ class Firewall(FirewallNetConfMixin, models.Model):
         max_length=30,
         verbose_name=_('tenant name')
     )
-    creater = models.CharField(
-        blank=True,
-        max_length=100,
-        verbose_name=_('creater'))
+    # creater = models.CharField(
+    #     blank=True,
+    #     max_length=100,
+    #     verbose_name=_('creater'))
     created = models.DateTimeField(
         blank=True,
         auto_now_add=True,
