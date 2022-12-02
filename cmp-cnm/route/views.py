@@ -22,7 +22,10 @@ class StaticRouteViewSet(mixins.CreateModelMixin,
 
     def get_queryset(self):
         qs = super().get_queryset()
-        qs = qs.filter(Q(status='2') & Q(region=self.request.headers.get("Region")) & Q(tenant_id=self.request.tenant.get("id")))
+        if self.request.user.is_staff:
+            qs = qs.filter(Q(status='2') & Q(region=self.request.headers.get("Region")))
+        if not self.request.user.is_staff:
+            qs = qs.filter(Q(status='2') & Q(region=self.request.headers.get("Region")) &Q(tenant_id=self.request.tenant.get("id")))
         return qs
 
     def create(self, request, *args, **kwargs):
