@@ -1,10 +1,11 @@
 from django.db.models import Q
 from rest_framework import mixins, viewsets, status
 from rest_framework.response import Response
-from lb.authentication import  OSAuthentication
+from lb.authentication import OSAuthentication
 from .filters import StaticRouteFilter
 from .models import StaticRoute
 from .serializer import StaticRouteSerializers
+from .cidr import Cidr
 import logging
 
 logger = logging.getLogger(__package__)
@@ -44,8 +45,10 @@ class StaticRouteViewSet(mixins.CreateModelMixin,
             destination_subnet = request.data['destination_subnet'],
             ip_next_hop_address = request.data['ip_next_hop_address'],
             cluster_code = request.data['cluster_code'],
-            StaticRoute().create_route(destination_subnet, ip_next_hop_address, cluster_code)
+            destination_subnet = Cidr().Masker(destination_subnet[0], cluster_code[0])
+            StaticRoute().create_route(destination_subnet, ip_next_hop_address[0], cluster_code[0])
             serializer.save(
+                destination_subnet=destination_subnet,
                 status='2'
             )
         except Exception as exc:

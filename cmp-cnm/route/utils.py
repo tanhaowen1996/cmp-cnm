@@ -55,10 +55,10 @@ class StaticRoutingNetConfMixin(NetConf):
                      <RouteEntry>
                          <DestVrfIndex>{ self.dest_vrf_index }</DestVrfIndex>
                          <DestTopologyIndex>{ self.dest_topology_index }</DestTopologyIndex>
-                         <Ipv4Address>{ destination_subnet[0] }</Ipv4Address>
-                         <Ipv4PrefixLength>{ cluster_code[0] }</Ipv4PrefixLength>
+                         <Ipv4Address>{ destination_subnet }</Ipv4Address>
+                         <Ipv4PrefixLength>{ cluster_code }</Ipv4PrefixLength>
                          <NexthopVrfIndex>{ self.next_hop_vrf_index }</NexthopVrfIndex>
-                         <NexthopIpv4Address>{ ip_next_hop_address[0] }</NexthopIpv4Address>
+                         <NexthopIpv4Address>{ ip_next_hop_address }</NexthopIpv4Address>
                          <IfIndex>{ self.if_index }</IfIndex>
                      </RouteEntry>
                  </Ipv4StaticRouteConfigurations>
