@@ -93,8 +93,9 @@ def delete_lb(session, lb_id):
         print(e)
 
 
-def create_listener(session, lb_id, listener_id, address, port, protocol):
+def create_listener(session, lb_id, listener_id, address, port, protocol, persistence):
     UDPBalance = 3
+    PBind = 3
     if protocol == "UDP":  # 如果是udp协议的则重新创建一个新的负载均衡，该负载均衡不被数据库记录，查询时通过id_udp查询
         UDPBalance = 2
         lb_id = lb_id + "_udp"
@@ -110,16 +111,18 @@ def create_listener(session, lb_id, listener_id, address, port, protocol):
         # index = lb[len(lb) - 1].get("Index") + 1
     create_group(session=session, listener_id=listener_id)
     url1 = RW_URL + "/config/SlbNewCfgEnhVirtServicesTable/" + lb_id + "/" + str(index)
+    if persistence:
+        PBind = 2
     payload1 = '''
                 {
                     "VirtPort": %d,
                     "RealPort": 0,
                     "DBind": 2,
-                    "PBind": 3,
+                    "PBind": %d,
                     "UDPBalance": %d
                 }
                 '''
-    payload1 = payload1 % (port, UDPBalance)
+    payload1 = payload1 % (port, PBind, UDPBalance)
     requests.post(url=url1, auth=session, data=payload1, verify=False)
     url5 = RW_URL + "/config/SlbNewCfgEnhVirtServicesFifthPartTable/" + lb_id + "/" + str(index)
     ServApplicationType = 1
