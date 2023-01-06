@@ -151,6 +151,9 @@ class LoadBalanceListener(models.Model):
         null=True,
         max_length=64
     )
+    persistence = models.BooleanField(
+        null=True
+    )
     updated_at = models.DateTimeField(
         auto_now=True,
         verbose_name=_('updated time'))
@@ -167,13 +170,13 @@ class LoadBalanceListener(models.Model):
                            address,
                            port,
                            protocol,
-                           lbmethod):
+                           lbmethod, persistence):
         citrix_client.create_lb_listener(ns_session,
                                          name,
                                          address,
                                          port,
                                          protocol,
-                                         lbmethod)
+                                         lbmethod, persistence)
 
     def delete_lb_listener(self, ns_session, name):
         citrix_client.delete_lb_listener(ns_session, name)
@@ -186,13 +189,14 @@ class LoadBalanceListener(models.Model):
         member = citrix_client.lb_vs_member_list(session=ns_session, lb_vs_name=name)
         return listener, member
 
-    def create_rd_lb_listener(rw_session, lb_id, listener_id, address, port, protocol):
+    def create_rd_lb_listener(rw_session, lb_id, listener_id, address, port, protocol, persistence):
         radware_client.create_listener(session=rw_session,
                                        lb_id=str(lb_id),
                                        listener_id=str(listener_id),
                                        address=address,
                                        port=port,
-                                       protocol=protocol)
+                                       protocol=protocol,
+                                       persistence=persistence)
 
     def delete_rw_listener(rw_session, lb_id, port, listener_id, protocol):
         radware_client.delete_listener(session=rw_session,
