@@ -62,7 +62,7 @@ def get_lb(session, name):
         return csvs
 
 
-def create_lb_listener(session, name, address, port, protocol, lbmethod):
+def create_lb_listener(session, name, address, port, protocol, lbmethod, persistence):
     """
     新建4层带有端口和协议的lbvs，作为负载均衡的监听器
     """
@@ -73,6 +73,8 @@ def create_lb_listener(session, name, address, port, protocol, lbmethod):
         lb_listener.ipv46 = address
         lb_listener.port = port
         lb_listener.lbmethod = lbmethod
+        if persistence:
+            lb_listener.persistencetype = "SOURCEIP"
         lbvserver.add(session, lb_listener)
     except nitro_exception as exc:
         print("Exception::errorcode=" + str(exc.errorcode) + ",message=" + exc.message)

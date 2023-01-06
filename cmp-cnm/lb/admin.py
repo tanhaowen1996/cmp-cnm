@@ -20,4 +20,4 @@ class LoadBalanceMemberAdmin(admin.ModelAdmin):
 @admin.register(LoadBalanceListener)
 class LoadBalanceListenerAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'lb_id', 'protocol', 'port', 'type',
-                    'algorithm', 'status', 'created_at')
+                    'algorithm', 'persistence', 'status', 'created_at')

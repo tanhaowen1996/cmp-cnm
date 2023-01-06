@@ -347,7 +347,8 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                                                        address=lb.ip,
                                                        port=data['port'],
                                                        protocol=data['protocol'],
-                                                       lbmethod=data.get('algorithm', 'ROUNDROBIN'))
+                                                       lbmethod=data.get('algorithm', 'ROUNDROBIN'),
+                                                       persistence=data.get('persistence', False))
                 citrix_save(session=ns_conn)
             except Exception as exc:
                 logger.error(f"try creating LoadBalance Listener {data['name']} : {exc}")
@@ -365,8 +366,8 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
                                                           listener_id=serializer.data['id'],
                                                           address=lb.ip,
                                                           port=data['port'],
-                                                          protocol=data['protocol']
-                                                          )
+                                                          protocol=data['protocol'],
+                                                          persistence=data.get('persistence', False))
                 apply_save(session=rw_conn)
             except Exception as e:
                 logger.error(f"try creating LoadBalance Listener {data['name']} : {e}")
@@ -387,10 +388,11 @@ class LoadBalanceListenerViewSet(OSCommonModelMixin, viewsets.ModelViewSet):
             lb_listener = lb_listener.__dict__
             lb_listener["member_num"] = 0
             lb_listener["all_member"] = 0
+            lb_listener['persistence'] = data.get('persistence', False)
             serializer = self.get_serializer(data=lb_listener)
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            logger.error(f"try update {data['name']} LoadBalance Listener database ERROR : {e}")
+            logger.error(f"try update {data['id']} LoadBalance Listener database ERROR : {e}")
             lb_listener = LoadBalanceListener.objects.get(id=serializer.data['id'])
             lb_listener.status = "DATE ERROR"
             lb_listener.save()
